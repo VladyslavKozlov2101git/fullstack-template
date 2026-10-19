@@ -174,17 +174,17 @@ Commit: `feat(web): add sign-in and sign-up pages`
 **Verify:** `pnpm --filter web typecheck && pnpm lint && pnpm --filter web test` **Satisfies:**
 AC-1, AC-2, AC-3, AC-5, AC-6, AC-7 (in task 8 by hand), AC-14.
 
-### - [ ] 7. Docs vault
+### - [x] 7. Docs vault
 
 Commit: `docs: document authorization and drop the no-auth known gap`
 
-- [ ] `docs/06-Cross-cutting/Known-Gaps.md`: delete the "There is no server-side authentication"
+- [x] `docs/06-Cross-cutting/Known-Gaps.md`: delete the "There is no server-side authentication"
       section, including its `grep ... UseGuards|AuthGuard|APP_GUARD` check
-- [ ] `docs/02-Architecture/Frontend.md` (~line 22): fix the `SessionSlice` reference
-- [ ] `docs/03-Features/Authorization.md`: new, from `docs/99-Templates/`
-- [ ] `docs/03-Features/Features.md`: link to it
-- [ ] `docs/journal/2026-10-19.md`: append an entry
-- [ ] Follow `docs/AGENTS.md`
+- [x] `docs/02-Architecture/Frontend.md` (~line 22): fix the `SessionSlice` reference
+- [x] `docs/03-Features/Authorization.md`: new, from `docs/99-Templates/`
+- [x] `docs/03-Features/Features.md`: link to it
+- [x] `docs/journal/2026-10-19.md`: append an entry
+- [x] Follow `docs/AGENTS.md`
 
 **Verify:** `pnpm docs:lint` (required: broken wikilinks fail `check.sh`), then `pnpm lint`.
 **Satisfies:** none directly; removes the docs claim this feature makes false.
