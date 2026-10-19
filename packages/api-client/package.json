@@ -1,9 +1,11 @@
 {
-  "name": "@app/api-client",
+  "name": "@repo/api-client",
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": { ".": "./src/index.ts" },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
     "generate": "openapi-typescript http://localhost:3000/api/docs-json -o src/schema.d.ts",
     "typecheck": "tsc --noEmit"

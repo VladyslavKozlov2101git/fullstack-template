@@ -1,0 +1,7 @@
+@use "@/assets/styles/mixins" as *;
+.root {
+  :global(.skeleton-container) {
+    display: block;
+    line-height: 1;
+  }
+}
