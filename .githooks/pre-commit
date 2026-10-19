@@ -1,0 +1,6 @@
+#!/bin/sh
+# Formats and lints staged files, scans them for credentials, then typechecks
+# the workspace (turbo caches it). Escape hatch: git commit --no-verify — which
+# scripts/claude/guard.sh denies to Claude, so it stays a human decision.
+sh "$(git rev-parse --show-toplevel)/scripts/secret-scan.sh" || exit 1
+pnpm lint-staged && pnpm typecheck

@@ -1,0 +1,68 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "unicorn"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "pedantic": "warn",
+    "perf": "warn",
+    "style": "warn"
+  },
+  "rules": {
+    /* Security — OWASP A03 (injection/XSS). Errors, not warnings: these must fail the build. */
+    "react/no-danger": "error",
+    "react/no-danger-with-children": "error",
+    "react/jsx-no-script-url": "error",
+    "react/jsx-no-target-blank": "error",
+    "no-eval": "error",
+    "no-implied-eval": "error",
+    "no-new-func": "error",
+    "no-script-url": "error",
+
+    "typescript/no-unused-vars": "off",
+    "react/exhaustive-deps": "off",
+    "react/react-in-jsx-scope": "off",
+    "no-unused-vars": "warn",
+    "max-lines": ["error", { "max": 250, "skipBlankLines": true, "skipComments": true }],
+    "unicorn/filename-case": "off",
+    "react/no-array-index-key": "off",
+    "sort-imports": "off",
+    "react/jsx-max-depth": "off",
+    "no-magic-numbers": "off",
+    "no-ternary": "off",
+    "no-nested-ternary": "off",
+    "unicorn/no-nested-ternary": "off",
+    "unicorn/no-null": "off",
+    "id-length": "off",
+    "max-lines-per-function": "off",
+
+    "unicorn/no-empty-file": "off",
+
+    "sort-keys": "off",
+    "arrow-body-style": "off",
+    "capitalized-comments": "off",
+    "func-names": "off",
+    "func-style": "off",
+    "curly": "off",
+    "require-await": "off",
+    "max-statements": "off",
+
+    "typescript/consistent-type-imports": "off",
+    "typescript/consistent-indexed-object-style": "off",
+
+    "react/jsx-props-no-spreading": "off",
+    "react/self-closing-comp": "off",
+    "react/jsx-boolean-value": "off",
+    "react/jsx-curly-brace-presence": "off",
+    "react/jsx-fragments": "off",
+    "react/jsx-no-useless-fragment": "off",
+    "react/state-in-constructor": "off",
+
+    "unicorn/prefer-global-this": "off",
+    "unicorn/prefer-spread": "off",
+    "unicorn/catch-error-name": "off",
+    "unicorn/prefer-query-selector": "off",
+    "unicorn/prefer-logical-operator-over-ternary": "off",
+    "unicorn/no-console-spaces": "off"
+  }
+}
