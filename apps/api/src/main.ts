@@ -14,7 +14,13 @@ async function bootstrap() {
   // ignoreGlobalPrefix keeps paths prefix-free; the client sets baseUrl to /api.
   const doc = SwaggerModule.createDocument(
     app,
-    new DocumentBuilder().setTitle("API").setVersion("1.0").build(),
+    new DocumentBuilder()
+      .setTitle("API")
+      .setVersion("1.0")
+      // The session is a cookie, not a bearer token — say so, or /api/docs
+      // cannot authenticate and the spec misdescribes the guarded routes.
+      .addCookieAuth("access_token")
+      .build(),
     { ignoreGlobalPrefix: true },
   );
   SwaggerModule.setup("api/docs", app, doc);

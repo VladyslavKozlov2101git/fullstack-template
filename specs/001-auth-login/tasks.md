@@ -45,35 +45,35 @@ Commit: `feat(api): add user password column and omit it globally`
 **Verify:** `pnpm --filter api typecheck && pnpm lint && pnpm --filter api test` **Satisfies:**
 AC-4, AC-12.
 
-### - [ ] 2. The auth module
+### - [x] 2. The auth module
 
 Commit: `feat(api): add auth module with httpOnly cookie session`
 
-- [ ] `pnpm --filter api add @nestjs/jwt`
-- [ ] `apps/api/src/auth/auth.dto.ts`: `LoginDto` (shape only), `RegisterDto` (`@MinLength(8)`),
+- [x] `pnpm --filter api add @nestjs/jwt`
+- [x] `apps/api/src/auth/auth.dto.ts`: `LoginDto` (shape only), `RegisterDto` (`@MinLength(8)`),
       `ApiErrorDto` (`message: string | string[]` as `oneOf`); both request DTOs `@MaxLength(72)` on
       password and `@Transform` email to trimmed lowercase
-- [ ] `apps/api/src/auth/password.ts`: scrypt `N=2**15, r=8, p=1, keylen=64, maxmem: 64MB`, stored
+- [x] `apps/api/src/auth/password.ts`: scrypt `N=2**15, r=8, p=1, keylen=64, maxmem: 64MB`, stored
       `scrypt$N$r$p$salt$hash`, `timingSafeEqual`
-- [ ] `apps/api/src/auth/password.spec.ts`: round trip, wrong password rejected, same password
+- [x] `apps/api/src/auth/password.spec.ts`: round trip, wrong password rejected, same password
       hashed twice differs
-- [ ] `apps/api/src/auth/jwt-auth.guard.ts`: parse `request.headers.cookie`, exact name match on
+- [x] `apps/api/src/auth/jwt-auth.guard.ts`: parse `request.headers.cookie`, exact name match on
       `access_token`, verify, look the user up by `sub` every request
-- [ ] `apps/api/src/auth/current-user.decorator.ts`
-- [ ] `apps/api/src/auth/auth.service.ts`: opts back in to `password` where it needs the hash; one
+- [x] `apps/api/src/auth/current-user.decorator.ts`
+- [x] `apps/api/src/auth/auth.service.ts`: opts back in to `password` where it needs the hash; one
       identical 401 message for unknown email and wrong password
-- [ ] `apps/api/src/auth/auth.controller.ts`: register (201, `@ApiCreatedResponse`), login (200,
+- [x] `apps/api/src/auth/auth.controller.ts`: register (201, `@ApiCreatedResponse`), login (200,
       `@HttpCode(HttpStatus.OK)`), sign-out (204, unguarded), me (200, guarded);
       `@Res({ passthrough: true })` on register, login, sign-out; `@ApiOkResponse`/`@ApiResponse`
       with `type: ApiErrorDto` for 400/401/409
-- [ ] `apps/api/src/auth/auth.module.ts`: `JwtModule.register({ global: true, ... })`; `JWT_SECRET`
+- [x] `apps/api/src/auth/auth.module.ts`: `JwtModule.register({ global: true, ... })`; `JWT_SECRET`
       read at module scope and throws if missing (no fallback); one `JWT_TTL_DAYS` drives both
       `expiresIn` and cookie `maxAge`; cookie `HttpOnly`, `SameSite=Lax`, `Path=/`, `Secure` in
       production
-- [ ] `apps/api/src/app.module.ts`: import `AuthModule`
-- [ ] `apps/api/src/users/users.controller.ts`: `@UseGuards(JwtAuthGuard)` + `@ApiCookieAuth`
-- [ ] `apps/api/src/main.ts`: `addCookieAuth("access_token")`
-- [ ] `apps/api/.env.example`: `JWT_SECRET`, `JWT_TTL_DAYS=7`; set `JWT_SECRET` in the local `.env`
+- [x] `apps/api/src/app.module.ts`: import `AuthModule`
+- [x] `apps/api/src/users/users.controller.ts`: `@UseGuards(JwtAuthGuard)` + `@ApiCookieAuth`
+- [x] `apps/api/src/main.ts`: `addCookieAuth("access_token")`
+- [x] `apps/api/.env.example`: `JWT_SECRET`, `JWT_TTL_DAYS=7`; set `JWT_SECRET` in the local `.env`
 
 **Verify:** `pnpm --filter api typecheck && pnpm lint && pnpm --filter api test`, then with
 `pnpm --filter api dev` running:
