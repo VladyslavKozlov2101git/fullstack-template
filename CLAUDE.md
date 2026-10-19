@@ -39,12 +39,12 @@ pnpm + Turborepo monorepo. NestJS API, React web, VitePress docs, OpenAPI-genera
 Four mechanisms, each doing one job. The split matters: **CLAUDE.md advises, hooks enforce** —
 anything that must not slip belongs in a hook or a permission rule, not in prose here.
 
-|        | Where                                       | Does                                                                                           |
-| ------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| rules  | this file + per-app `CLAUDE.md`             | always loaded; short and always true                                                           |
-| skills | `apps/api/.claude/skills/`                  | procedures, loaded only when relevant — `nest-module`, `prisma-migration`                      |
-| agents | `.claude/agents/`                           | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `test-runner`              |
-| hooks  | `.claude/settings.json` → `scripts/claude/` | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck or lint are red |
+|        | Where                                         | Does                                                                                                                             |
+| ------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| rules  | this file + per-app `CLAUDE.md`               | always loaded; short and always true                                                                                             |
+| skills | `.claude/skills/`, `apps/api/.claude/skills/` | procedures, loaded on demand — `feature` (the SDD pipeline), `nest-module`, `prisma-migration`                                   |
+| agents | `.claude/agents/`                             | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `test-runner`, `doc-writer` (writes spec/plan/tasks, sonnet) |
+| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck or lint are red                                   |
 
 `check.sh` skips turns that changed no `.ts`/`.tsx`, and gives up after three blocked attempts so a
 session can never be trapped. Both hooks are plain `sh` and read their payload with node — this
@@ -52,6 +52,13 @@ machine has no `jq`.
 
 Run the tests yourself after each task; the Stop hook deliberately does not (too slow to run every
 turn).
+
+**A feature request arriving here — a ТЗ, a ticket, "implement X" — goes through the `feature`
+skill, not straight into code.** It runs the SDD cycle one session per phase (spec → plan → build →
+review): research delegated to `Explore`, document writing to `doc-writer`, review to
+`spec-reviewer` + `reviewer`. Always say which phase you are in. The user approves the spec, the
+plan and the PR; everything between those is yours. A one-line fix is not a feature — use judgement,
+but when in doubt write the spec.
 
 If the same mistake happens twice, change the system rather than the code: a rule here, a step in a
 skill, or a check in a hook.

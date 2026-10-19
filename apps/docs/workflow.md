@@ -17,6 +17,25 @@ There is no husky.
 
 ## Adding a feature
 
+Drop the ТЗ into a session and say `/feature spec` (or just hand it over — `CLAUDE.md` routes
+feature requests into the same pipeline). Each phase is a separate invocation in a separate session,
+because the artifacts in `specs/<feature>/` are what carries state between them, not the context
+window:
+
+```
+/feature spec     → specs/NNN-slug/request.md + spec.md   you approve the criteria
+/feature plan     → plan.md + tasks.md                    you approve the plan
+/feature build    → code, tests, one commit per task
+/feature review   → spec-reviewer + reviewer, then PR     you review the PR
+```
+
+Who runs what: the main session (Opus) does the requirements interview and the architecture calls,
+`Explore` does codebase research, `doc-writer` (sonnet) writes the three documents, `test-runner`
+diagnoses failures, and `spec-reviewer` + `reviewer` run the review with a clean context.
+Implementation stays in the main session — delegating it hides the diff you are meant to be judging.
+
+### The three checkpoints
+
 1. `git switch -c feat/thing` off `development`.
 2. Write the spec in `specs/` if the change is non-trivial.
 3. Backend first if the contract moves: schema → migration → controller + DTOs →
