@@ -97,12 +97,12 @@ the cookie.
 **Satisfies:** AC-1 (API half), AC-2, AC-3, AC-4, AC-5, AC-6, AC-9, AC-12, AC-13, AC-16, AC-17,
 AC-18, AC-19.
 
-### - [ ] 3. Regenerate the client
+### - [x] 3. Regenerate the client
 
 Commit: `chore(api-client): regenerate schema for auth endpoints`
 
-- [ ] API running against the migrated DB, then `pnpm api:generate`
-- [ ] Commit `packages/api-client/src/schema.d.ts` only. Never edit it by hand.
+- [x] API running against the migrated DB, then `pnpm api:generate`
+- [x] Commit `packages/api-client/src/schema.d.ts` only. Never edit it by hand.
 
 **Verify:** `grep -n '"/auth/' packages/api-client/src/schema.d.ts` shows register, login, sign-out,
 me. `grep -n password packages/api-client/src/schema.d.ts` hits `LoginDto`/`RegisterDto` only, never
