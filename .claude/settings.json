@@ -14,17 +14,40 @@
       "Edit(./apps/api/prisma/migrations/**)"
     ],
     "allow": [
-      "Bash(pnpm install)",
-      "Bash(pnpm dev:*)",
-      "Bash(pnpm build:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pnpm lint:*)",
-      "Bash(pnpm typecheck:*)",
-      "Bash(pnpm --filter:*)",
-      "Bash(docker compose:*)",
+      "Bash(pnpm *)",
+      "Bash(docker compose *)",
       "Bash(git status)",
-      "Bash(git diff:*)",
-      "Bash(git log:*)"
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(sh scripts/claude/*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh ./scripts/claude/format.sh",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh ./scripts/claude/check.sh",
+            "timeout": 180,
+            "statusMessage": "typecheck + lint"
+          }
+        ]
+      }
     ]
   }
 }

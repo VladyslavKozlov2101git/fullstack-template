@@ -34,6 +34,28 @@ pnpm + Turborepo monorepo. NestJS API, React web, VitePress docs, OpenAPI-genera
 - Lint/format config lives at the root only (`.oxlintrc.json`, `.prettierrc`, `.lintstagedrc`).
   Don't add per-package copies.
 
+## How this repo is set up for Claude
+
+Four mechanisms, each doing one job. The split matters: **CLAUDE.md advises, hooks enforce** —
+anything that must not slip belongs in a hook or a permission rule, not in prose here.
+
+|        | Where                                       | Does                                                                                           |
+| ------ | ------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| rules  | this file + per-app `CLAUDE.md`             | always loaded; short and always true                                                           |
+| skills | `apps/api/.claude/skills/`                  | procedures, loaded only when relevant — `nest-module`, `prisma-migration`                      |
+| agents | `.claude/agents/`                           | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `test-runner`              |
+| hooks  | `.claude/settings.json` → `scripts/claude/` | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck or lint are red |
+
+`check.sh` skips turns that changed no `.ts`/`.tsx`, and gives up after three blocked attempts so a
+session can never be trapped. Both hooks are plain `sh` and read their payload with node — this
+machine has no `jq`.
+
+Run the tests yourself after each task; the Stop hook deliberately does not (too slow to run every
+turn).
+
+If the same mistake happens twice, change the system rather than the code: a rule here, a step in a
+skill, or a check in a hook.
+
 ## Git
 
 Two long-lived branches, everything else is short-lived:

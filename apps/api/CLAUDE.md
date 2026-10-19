@@ -12,16 +12,16 @@ prefix.
 
 ## Rules
 
-- One module per domain concept: `src/<thing>/` with `.module.ts`, `.controller.ts`, `.service.ts`.
-  Flat files at `src/` root are for app-wide wiring only.
+- One module per domain concept: `src/<thing>/` with `.module.ts`, `.controller.ts`, `.service.ts`,
+  `*.dto.ts`. Flat files at `src/` root are app-wide wiring only. Procedure: the **nest-module**
+  skill.
 - Controllers do HTTP, services do logic, Prisma only in services. No `PrismaService` in a
   controller.
-- **Every** request body and query gets a DTO class with `class-validator` decorators. The global
-  `ValidationPipe` uses `whitelist: true`, so undecorated fields are silently dropped — an
-  undecorated DTO means no input at all.
-- Response shapes need `@ApiOkResponse({ type: Dto })` or they land in the OpenAPI spec as `any` and
-  the generated client goes untyped.
-- Never edit `prisma/migrations/**`. Wrong migration → new migration.
-- Changed the schema? Migrate, then regenerate the client: `pnpm --filter @repo/api-client generate`
-  (API must be running).
+- **Every** request body and query gets a DTO class with `class-validator` decorators, and every
+  response gets `@ApiOkResponse({ type: Dto })`. Without them the OpenAPI spec says `any` and the
+  whole frontend loses its types — the global `ValidationPipe` uses `whitelist: true`, so an
+  undecorated DTO receives nothing at all.
+- Never edit `prisma/migrations/**`. Wrong migration → new migration. Procedure: the
+  **prisma-migration** skill.
+- Schema change → `pnpm db:migrate` → `pnpm api:generate` (API must be running). In that order.
 - Secrets come from `process.env`, and every new var goes in `.env.example`.
