@@ -1,0 +1,17 @@
+{
+  "name": "fullstack-template",
+  "private": true,
+  "packageManager": "pnpm@10.15.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "typecheck": "turbo typecheck",
+    "db:up": "docker compose up -d",
+    "db:migrate": "pnpm --filter api prisma migrate dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.0",
+    "typescript": "^5.9.0"
+  }
+}

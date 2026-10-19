@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2023",
+    "lib": ["ES2023"],
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    "sourceMap": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true
+  },
+  "include": ["src/**/*"]
+}
