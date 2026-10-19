@@ -47,4 +47,14 @@ development   integration branch, default PR target. Deploy to staging.
 - Urgent production fix: branch `fix/…` off `master`, PR into `master`, then merge `master` back into `development`. No separate hotfix flow.
 - One logical change per commit. Don't commit generated output (see `.gitignore`).
 
+### First push to a new remote
+
+The pre-push hook blocks `master` and `development`, including their first push, so seed them once and then turn on the server-side rules:
+
+```sh
+git remote add origin git@github.com:<you>/<repo>.git
+git push --no-verify -u origin master development
+sh scripts/protect-branches.sh
+```
+
 Hooks are activated by `pnpm install` (the `prepare` script sets `core.hooksPath`). Server-side rules: run `scripts/protect-branches.sh` once per repo.
