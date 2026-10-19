@@ -9,14 +9,11 @@ A pnpm + Turborepo monorepo: a NestJS API, a React SPA, and a typed API client g
 API's own OpenAPI spec — so a backend contract change breaks the frontend build instead of
 production.
 
-> [!info] Two apps, one contract The API ([[Backend]]) owns the database schema and the HTTP
-> contract. The web app ([[Frontend]]) consumes it only through the generated client. The pipeline
-> that connects them is [[System-overview]], and the decision behind it is
-> [[0001-contract-first-openapi]].
+> [!info] Two apps, one contract
+> The API ([[Backend]]) owns the database schema and the HTTP contract. The web app ([[Frontend]]) consumes it only through the generated client. The pipeline that connects them is [[System-overview]], and the decision behind it is [[0001-contract-first-openapi]].
 
-> [!important] The code is the source of truth This vault explains _why_ and _how we work_. For what
-> the system does right now, read the code — see [[AGENTS|the source priority rules]]. Work in
-> progress lives in `../specs/`, not here.
+> [!important] The code is the source of truth
+> This vault explains _why_ and _how we work_. For what the system does right now, read the code — see [[AGENTS|the source priority rules]]. Work in progress lives in `../specs/`, not here.
 
 ## Start here
 

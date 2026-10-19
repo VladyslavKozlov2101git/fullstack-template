@@ -6,8 +6,8 @@ tags:
 
 # Deploy
 
-> [!warning] Untested This runbook is the intended path, not a verified one — nothing has been
-> deployed from this repo yet. Correct it the first time you do, and delete this callout.
+> [!warning] Untested
+> This runbook is the intended path, not a verified one — nothing has been deployed from this repo yet. Correct it the first time you do, and delete this callout.
 
 ## Build
 

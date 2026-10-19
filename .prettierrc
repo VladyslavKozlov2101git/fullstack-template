@@ -1,5 +1,7 @@
 {
-  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "plugins": [
+    "@trivago/prettier-plugin-sort-imports"
+  ],
   "importOrder": [
     "react",
     "clsx",
@@ -29,5 +31,17 @@
   "importOrderSeparation": true,
   "importOrderSortSpecifiers": true,
   "proseWrap": "always",
-  "importOrderParserPlugins": ["typescript", "jsx", "decorators-legacy"]
+  "importOrderParserPlugins": [
+    "typescript",
+    "jsx",
+    "decorators-legacy"
+  ],
+  "overrides": [
+    {
+      "files": "docs/**/*.md",
+      "options": {
+        "proseWrap": "preserve"
+      }
+    }
+  ]
 }
