@@ -31,6 +31,20 @@ pnpm + Turborepo monorepo. NestJS API, React web, VitePress docs, OpenAPI-genera
 
 ## Git
 
-- Branches: `feat/`, `fix/`, `chore/`, `docs/` + short kebab slug.
-- Commits: Conventional Commits with the app as scope — `feat(api): add booking endpoint`.
+Two long-lived branches, everything else is short-lived:
+
+```
+master        always deployable. Only ever receives PRs from development.
+development   integration branch, default PR target. Deploy to staging.
+  feat/…      branched off development, merged back by PR, deleted after.
+  fix/… chore/… docs/…
+```
+
+- Branch names: `feat/`, `fix/`, `chore/`, `docs/` + short kebab slug.
+- Commits: Conventional Commits with the app as scope — `feat(api): add booking endpoint`. Enforced by `.githooks/commit-msg`.
+- Never push to `master` or `development` directly — `.githooks/pre-push` blocks it locally, the GitHub ruleset blocks it for real. Both hooks take `--no-verify` when you genuinely need out.
+- Squash-merge feature PRs into `development`. Merge (not squash) `development` → `master`, so master keeps the history.
+- Urgent production fix: branch `fix/…` off `master`, PR into `master`, then merge `master` back into `development`. No separate hotfix flow.
 - One logical change per commit. Don't commit generated output (see `.gitignore`).
+
+Hooks are activated by `pnpm install` (the `prepare` script sets `core.hooksPath`). Server-side rules: run `scripts/protect-branches.sh` once per repo.

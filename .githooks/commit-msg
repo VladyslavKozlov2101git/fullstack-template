@@ -1,0 +1,23 @@
+#!/bin/sh
+# Conventional Commits, as documented in CLAUDE.md. Escape hatch: git commit --no-verify.
+
+subject=$(head -1 "$1")
+
+# git writes these itself
+case "$subject" in
+  Merge*|Revert*|fixup!*|squash!*) exit 0 ;;
+esac
+
+if echo "$subject" | grep -qE '^(feat|fix|chore|docs|refactor|test|perf|build|ci)(\([a-z0-9/_-]+\))?!?: .{3,}$'; then
+  exit 0
+fi
+
+echo "" >&2
+echo "  Commit subject must be a Conventional Commit:" >&2
+echo "    feat(api): add booking endpoint" >&2
+echo "    fix(web): stop double-submit on enter" >&2
+echo "" >&2
+echo "  Got: $subject" >&2
+echo "  Types: feat fix chore docs refactor test perf build ci" >&2
+echo "" >&2
+exit 1

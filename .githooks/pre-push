@@ -1,0 +1,20 @@
+#!/bin/sh
+# Blocks direct pushes to long-lived branches.
+# This is a fast local guard only — the real enforcement is the server-side
+# ruleset (scripts/protect-branches.sh). Escape hatch: git push --no-verify.
+
+protected='master development'
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  branch=${remote_ref#refs/heads/}
+  for p in $protected; do
+    [ "$branch" = "$p" ] || continue
+    echo "" >&2
+    echo "  Direct push to '$p' is blocked. Open a PR instead:" >&2
+    echo "" >&2
+    echo "    git switch -c feat/your-change" >&2
+    echo "    git push -u origin HEAD" >&2
+    echo "" >&2
+    exit 1
+  done
+done
