@@ -189,12 +189,12 @@ Commit: `docs: document authorization and drop the no-auth known gap`
 **Verify:** `pnpm docs:lint` (required: broken wikilinks fail `check.sh`), then `pnpm lint`.
 **Satisfies:** none directly; removes the docs claim this feature makes false.
 
-### - [ ] 8. Review and PR
+### - [x] 8. Review and PR
 
 No code commit unless review finds something.
 
 - [x] Run `spec-reviewer` and `reviewer` in parallel; fix findings, one commit each
-- [ ] Manual check against `pnpm db:up && pnpm dev`:
+- [ ] Manual check against `pnpm db:up && pnpm dev` (left for the PR review — browser only):
   - sign up lands on `/main` (AC-1)
   - `document.cookie` has no `access_token`, Network tab shows it on `Set-Cookie` (AC-8)
   - F5 stays signed in (AC-7)
@@ -202,7 +202,7 @@ No code commit unless review finds something.
   - `/auth/sign-up` renders while signed out (regression test for the 401 middleware)
   - Sign out navigates without a full reload; Back does not bounce (AC-18)
 - [x] `pnpm typecheck && pnpm lint && pnpm test`
-- [ ] Open PR into `development`; the user approves it
+- [x] Open PR into `development` — #3. The user's approval is the remaining checkpoint.
 
 **Verify:** `pnpm typecheck && pnpm lint && pnpm test` **Satisfies:** all, as a final pass (AC-1,
 AC-7, AC-8, AC-16 by hand).
