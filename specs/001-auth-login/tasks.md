@@ -110,18 +110,21 @@ me. `grep -n password packages/api-client/src/schema.d.ts` hits `LoginDto`/`Regi
 
 **Fork point: from here, tasks 4-7 touch no `apps/api` file and can run in a separate session.**
 
-### - [ ] 4. Web plumbing
+### - [x] 4. Web plumbing
 
 Commit: `feat(web): add auth endpoints and drop bearer middleware`
 
-- [ ] `apps/web/src/services/api.ts`: delete `TOKEN_COOKIE` and the `onRequest` bearer middleware;
-      exempt `/auth/` paths from the 401 redirect branch; one comment that a cross-origin
-      `VITE_API_URL` would need `credentials: "include"`
-- [ ] `apps/web/src/services/cachedAPI.ts`: `"Me"` tag; `getMe` query; `register`, `login`,
+- [x] `apps/web/src/services/api.ts`: exempt `/auth/` paths from the 401 redirect branch; one
+      comment that a cross-origin `VITE_API_URL` would need `credentials: "include"`
+- [x] `apps/web/src/services/cachedAPI.ts`: `"Me"` tag; `getMe` query; `register`, `login`,
       `signOut` mutations that invalidate `"Me"`; `signOut`'s `queryFn` checks `response.ok` only
       (204 has no body); widen the `fakeBaseQuery` generic to `message: string | string[]`
-- [ ] `apps/web/src/helpers/functions.ts`: `asMessages()` (string or array to `string[]`)
-- [ ] Types derived from `paths[...]`; requests go through `api`
+- [x] `apps/web/src/helpers/functions.ts`: `asMessages()` (string or array to `string[]`)
+- [x] Types derived from `paths[...]`; requests go through `api`
+
+> Deviation: deleting `TOKEN_COOKIE` and the `onRequest` middleware moved to task 5. `SessionSlice`
+> and `routes.tsx` import `TOKEN_COOKIE` and are only removed there, so doing it here would leave
+> typecheck red at this boundary — which the Stop hook refuses.
 
 **Verify:** `pnpm --filter web typecheck && pnpm lint && pnpm --filter web test` **Satisfies:**
 AC-14, AC-15, AC-16.
