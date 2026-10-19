@@ -22,6 +22,14 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(sh scripts/claude/*)"
+    ],
+    "ask": [
+      "Edit(./.claude/settings.json)",
+      "Edit(./scripts/claude/**)",
+      "Edit(./.githooks/**)",
+      "Edit(./.oxlintrc.json)",
+      "Edit(./.prettierrc)",
+      "Edit(./.lintstagedrc)"
     ]
   },
   "hooks": {
@@ -45,6 +53,18 @@
             "command": "sh ./scripts/claude/check.sh",
             "timeout": 180,
             "statusMessage": "typecheck + lint"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ./scripts/claude/guard.mjs",
+            "timeout": 10
           }
         ]
       }
