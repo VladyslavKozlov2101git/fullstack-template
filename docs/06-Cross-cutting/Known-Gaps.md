@@ -16,6 +16,12 @@ a separate concern with its own dependency. A public login endpoint without it i
 and the scrypt cost in `apps/api/src/auth/password.ts` is deliberately below the OWASP floor
 _because_ nothing throttles the endpoint. Both move together: add throttling, then raise the cost.
 
+Registration enumerates accounts for free, which is the same family of problem. `POST /auth/login`
+is uniform in message, status and timing — the unknown-email path verifies against a decoy digest so
+it costs the same — but `POST /auth/register` has to answer 409 on a taken email, so existence is
+discoverable through the front door. Open self-registration without a challenge cannot avoid that;
+a CAPTCHA or an invite flow can.
+
 > [!info] The gap this replaces
 > This section used to read "there is no server-side authentication", found by `spec-reviewer`
 > during a pipeline smoke test on 2026-10-19. [[Authorization]] closed it the same day: the API has

@@ -111,6 +111,11 @@ show/hide toggle, because the component falls back to `type` the moment it flips
       a separate concern with its own dependency. A public login endpoint without it is
       brute-forceable, and the scrypt cost above is chosen for a world without it. Tracked in
       [[Known-Gaps]].
+- [ ] **Registration enumerates accounts.** Login is uniform in message, status _and_ timing — the
+      unknown-email path verifies against a decoy digest so it costs the same — but
+      `POST /auth/register` answers 409 on a taken email, so anyone can still discover whether an
+      address has an account. That is inherent to open self-registration without a challenge:
+      closing it means a CAPTCHA or an invite flow, not a change to the login path.
 - [ ] No password reset, no email confirmation, no refresh-token rotation, no roles. All out of
       scope in the spec, none of them blocked by what shipped.
 - [ ] `InputElement`'s `isForgot` prop links to `//auth/sign-in` — a protocol-relative URL pointing

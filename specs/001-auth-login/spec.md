@@ -19,7 +19,7 @@ and every current gate is client-side only. This feature makes it real.
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Session transport | JWT in an httpOnly cookie set by the API. Not localStorage, not a bearer header.                                                                                   |
 | Registration      | Open self-registration. Public endpoint and page. No email confirmation, no admin gating, no invite.                                                               |
-| Frontend scope    | Sign-in page, sign-up page, protected-route redirect.                                                                                                              |
+| Frontend scope    | Sign-in page, sign-up page, protected-route redirect, and the Sign out button already in the header (see Scope changes).                                           |
 | Guard state       | `GET /api/auth/me` called on app start; the guard waits for the answer. This pulls "current user in state" into scope (an httpOnly cookie cannot be read from JS). |
 | Password rule     | Minimum 8 characters. One rule, same message on both sides. No composition rules, no breach check.                                                                 |
 
@@ -161,7 +161,7 @@ column. Existing fields (`id`, `email` unique, `name?`, `createdAt`) are unchang
 ## Verification
 
 - `pnpm typecheck`, `pnpm lint`, `pnpm --filter api test`, `pnpm --filter web test` all green.
-- `curl -s localhost:3000/api/docs-json` lists the three new paths with typed bodies and responses.
+- `curl -s localhost:3000/api/docs-json` lists the four new paths with typed bodies and responses.
 - `apps/api` has no tests yet; this feature adds the first. Minimum: a hash/verify round trip plus a
   wrong-password case. It is a security path, so it does not ship without a check.
 - Web tests cover the guard redirects (AC-10, AC-11) and form error display (AC-2, AC-3, AC-6).
@@ -175,11 +175,31 @@ column. Existing fields (`id`, `email` unique, `name?`, `createdAt`) are unchang
 - Dev is same-origin through the Vite proxy, so no CORS config is added. A production deploy on a
   different origin would need CORS with credentials. Risk: confirm the production topology before
   deploy.
-- Email is case-insensitive: it is normalised to lowercase on registration and on the login lookup,
-  so one address cannot become two accounts. The column stays a plain unique string.
+- Email is normalised at the boundary — trimmed **and** lower-cased — so one address cannot become
+  two accounts and a stray space cannot lock someone out. The column stays a plain unique string.
+- Password length is capped at 128 characters as well as floored at 8. Not a second product rule:
+  scrypt hashes whatever it is handed, so an unbounded field is free work for an attacker. (72 would
+  be a bcrypt limit; scrypt has none.)
+- A login with an unknown email is verified against a throwaway digest, so it costs the same as one
+  with a known email and the response time does not reveal which it was. The digest is warmed at
+  startup so the first such request does not stand out either.
+- `JWT_TTL_DAYS` is validated, not merely defaulted: an empty value would otherwise mean tokens that
+  expire on issue, and a non-numeric one a 500 on every sign.
+- The cookie is `Secure` unless `NODE_ENV` is explicitly `development`, which is why `.env.example`
+  sets it. The other default lets a deployment that forgets send session cookies in the clear
+  without saying so.
 - `User.name` is left null on registration.
 
 ## Open questions
 
-None. Sign-out and email casing were the two that came up; both are resolved above (out of scope by
-the user's choice, and a stated assumption respectively).
+None open. For the record, three came up and were settled rather than deferred:
+
+- **Email casing** — resolved as a stated assumption (normalised at the boundary).
+- **Sign-out** — initially declined, then brought **into** scope once research found the dead button
+  already sitting in the header. See Scope changes and AC-18. This paragraph replaces the earlier
+  "out of scope by the user's choice" wording, which contradicted the amendment.
+- **Account enumeration** — login is deliberately uniform in message, status and timing, but
+  `POST /auth/register` answers 409 on a taken email, so account existence is discoverable through
+  the front door anyway. That is the cost of open self-registration without a challenge, and not
+  something the login path can fix on its own. Tracked beside the rate-limiting gap in
+  `docs/06-Cross-cutting/Known-Gaps.md`.

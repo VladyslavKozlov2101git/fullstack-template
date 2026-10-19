@@ -193,7 +193,7 @@ Commit: `docs: document authorization and drop the no-auth known gap`
 
 No code commit unless review finds something.
 
-- [ ] Run `spec-reviewer` and `reviewer` in parallel; fix findings, one commit each
+- [x] Run `spec-reviewer` and `reviewer` in parallel; fix findings, one commit each
 - [ ] Manual check against `pnpm db:up && pnpm dev`:
   - sign up lands on `/main` (AC-1)
   - `document.cookie` has no `access_token`, Network tab shows it on `Set-Cookie` (AC-8)
@@ -201,7 +201,7 @@ No code commit unless review finds something.
   - a tampered cookie byte returns to sign-in (AC-16)
   - `/auth/sign-up` renders while signed out (regression test for the 401 middleware)
   - Sign out navigates without a full reload; Back does not bounce (AC-18)
-- [ ] `pnpm typecheck && pnpm lint && pnpm test`
+- [x] `pnpm typecheck && pnpm lint && pnpm test`
 - [ ] Open PR into `development`; the user approves it
 
 **Verify:** `pnpm typecheck && pnpm lint && pnpm test` **Satisfies:** all, as a final pass (AC-1,
