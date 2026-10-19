@@ -2,14 +2,8 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { api } from "./api";
 
-import { CREDENTIALS, REGISTRATION } from "@models/Auth.model";
+import { CREDENTIALS, QUERY_ERROR, REGISTRATION } from "@models/Auth.model";
 import { USER } from "@models/User.model";
-
-/** What `fakeBaseQuery` carries: the validation pipe answers with an array. */
-interface ApiError {
-  status: number;
-  message: string | string[];
-}
 
 const fail = (response: Response, body?: { message: string | string[] }) => ({
   error: { status: response.status, message: body?.message ?? response.statusText },
@@ -25,7 +19,7 @@ const fail = (response: Response, body?: { message: string | string[] }) => ({
  * which is why every auth mutation invalidates it.
  */
 export const cachedAPI = createApi({
-  baseQuery: fakeBaseQuery<ApiError>(),
+  baseQuery: fakeBaseQuery<QUERY_ERROR>(),
   tagTypes: ["Users", "Me"],
   endpoints: (builder) => ({
     getUsers: builder.query<USER[], void>({
@@ -53,6 +47,10 @@ export const cachedAPI = createApi({
 
         return { data };
       },
+      // Registered even while this query is in its error state, which is what
+      // the sign-in flow leans on: logging in invalidates "Me" and the cached
+      // 401 is refetched, which is how anything learns the session exists.
+      // SignIn.test.tsx covers that path end to end.
       providesTags: ["Me"],
     }),
 

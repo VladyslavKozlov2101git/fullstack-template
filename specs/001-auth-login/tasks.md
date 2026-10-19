@@ -153,23 +153,23 @@ Commit: `refactor(web): guard routes on /auth/me and remove token cookie`
 `git grep -nE "js-cookie|TOKEN_COOKIE|SessionSlice|session\.token"` returns nothing outside `docs/`.
 **Satisfies:** AC-10, AC-11, AC-15, AC-16, AC-18.
 
-### - [ ] 6. Pages and routing
+### - [x] 6. Pages and routing
 
 Commit: `feat(web): add sign-in and sign-up pages`
 
-- [ ] `apps/web/src/routes/paths.ts`: `component` on `signIn`, new `signUp` entry
-- [ ] `apps/web/src/routes/routes.tsx`: real lazy pages replace the two `<h2>`
-- [ ] `apps/web/src/pages/SignIn/` (`SignIn.tsx`, `SignIn.module.scss`, `index.ts`, test) and
+- [x] `apps/web/src/routes/paths.ts`: `component` on `signIn`, new `signUp` entry
+- [x] `apps/web/src/routes/routes.tsx`: real lazy pages replace the two `<h2>`
+- [x] `apps/web/src/pages/SignIn/` (`SignIn.tsx`, `SignIn.module.scss`, `index.ts`, test) and
       `apps/web/src/pages/SignUp/` (same four). `pnpm plop` is interactive: hand-write or use its
       bypass args
-- [ ] Forms: controlled `useState`; `InputElement` with `type="email"`; password with `isPassword`
+- [x] Forms: controlled `useState`; `InputElement` with `type="email"`; password with `isPassword`
       **alone** (no `type="password"`); `ButtonElement type="submit"` with `isLoading` and an
       explicit `disabled={isLoading}`
-- [ ] `apps/web/src/shared/InputElement`: add `autoComplete?` and `name?` to `InputElementProps` (do
+- [x] `apps/web/src/shared/InputElement`: add `autoComplete?` and `name?` to `InputElementProps` (do
       not extend `React.InputHTMLAttributes`); `aria-invalid` + `aria-describedby` on the error
-- [ ] Error display: 409 on the sign-up email field; password-length message on the password field;
+- [x] Error display: 409 on the sign-up email field; password-length message on the password field;
       401 message as one form-level error on sign-in; anything else as a generic form error
-- [ ] Tests: form error display for 409, short password, 401
+- [x] Tests: form error display for 409, short password, 401
 
 **Verify:** `pnpm --filter web typecheck && pnpm lint && pnpm --filter web test` **Satisfies:**
 AC-1, AC-2, AC-3, AC-5, AC-6, AC-7 (in task 8 by hand), AC-14.

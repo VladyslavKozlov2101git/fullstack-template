@@ -26,8 +26,11 @@ export const router = createBrowserRouter([
         caseSensitive: true,
         children: [
           { index: true, loader: async () => redirect(authPath.signIn.path) },
-          { path: "sign-in", element: <h2>sign-in</h2>, caseSensitive: true },
-          { path: "sign-up", element: <h2>sign-up</h2>, caseSensitive: true },
+          ...Object.values(authPath).map((path) => ({
+            path: path.path,
+            element: <path.component />,
+            caseSensitive: true,
+          })),
         ],
       },
       {
