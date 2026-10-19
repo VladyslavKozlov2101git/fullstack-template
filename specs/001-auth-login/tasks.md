@@ -129,22 +129,25 @@ Commit: `feat(web): add auth endpoints and drop bearer middleware`
 **Verify:** `pnpm --filter web typecheck && pnpm lint && pnpm --filter web test` **Satisfies:**
 AC-14, AC-15, AC-16.
 
-### - [ ] 5. Guards and delete the token cookie
+### - [x] 5. Guards and delete the token cookie
 
 Commit: `refactor(web): guard routes on /auth/me and remove token cookie`
 
-- [ ] `AuthContainer` and `MainContainer`: render-time `<Navigate replace/>`, gating on
+- [x] `AuthContainer` and `MainContainer`: render-time `<Navigate replace/>`, gating on
       `isSuccess`/`isError`, never `isLoading`; nothing rendered while uninitialised/pending
-- [ ] `apps/web/src/layouts/Header/Header.tsx`: sign-out button uses `useSignOutMutation`; delete
+- [x] `apps/web/src/layouts/Header/Header.tsx`: sign-out button uses `useSignOutMutation`; delete
       the `token &&` condition
-- [ ] Remove `session` from `rootReducer`
-- [ ] Delete `apps/web/src/redux/SessionSlice/`
-- [ ] `apps/web/src/routes/routes.tsx`: delete `isAuthed()` and the `js-cookie` import; index loader
+- [x] Remove `session` from `rootReducer`
+- [x] Delete `apps/web/src/redux/SessionSlice/`
+- [x] `apps/web/src/routes/routes.tsx`: delete `isAuthed()` and the `js-cookie` import; index loader
       redirects to `rootMainPath`
-- [ ] `pnpm --filter web remove js-cookie @types/js-cookie`
-- [ ] `apps/web/CLAUDE.md`: fix the `SessionSlice` row
-- [ ] Container tests with a test-local `createMemoryRouter`: unauthenticated on a protected route
+- [x] `pnpm --filter web remove js-cookie @types/js-cookie`
+- [x] `apps/web/CLAUDE.md`: fix the `SessionSlice` row
+- [x] Container tests with a test-local `createMemoryRouter`: unauthenticated on a protected route
       redirects to sign-in; authenticated on an auth route redirects to `/main`
+
+> Also done here, moved from task 4: deleting `TOKEN_COOKIE` and the `onRequest` bearer middleware
+> from `services/api.ts`, alongside the last callers that imported them.
 
 **Verify:** `pnpm --filter web typecheck && pnpm lint && pnpm --filter web test`, and
 `git grep -nE "js-cookie|TOKEN_COOKIE|SessionSlice|session\.token"` returns nothing outside `docs/`.

@@ -1,19 +1,11 @@
 import { Outlet, createBrowserRouter, redirect } from "react-router";
 
-import Cookies from "js-cookie";
-
 import { authPath, mainPath, rootAuthPath, rootMainPath } from "./paths";
 
 import AuthContainer from "@containers/AuthContainer";
 import MainContainer from "@containers/MainContainer";
 
-import { TOKEN_COOKIE } from "@services/api";
-
 import ErrorPage from "@pages/ErrorPage";
-
-// Read inside the loader, not at module scope — otherwise the very first
-// token value is baked in for the whole session.
-const isAuthed = () => Boolean(Cookies.get(TOKEN_COOKIE));
 
 export const router = createBrowserRouter([
   {
@@ -22,8 +14,11 @@ export const router = createBrowserRouter([
     element: <Outlet />,
     children: [
       {
+        // No session check here: the cookie is httpOnly, so the answer needs a
+        // request. MainContainer asks, and sends the visitor to sign-in if the
+        // answer is no.
         index: true,
-        loader: async () => redirect(isAuthed() ? mainPath.dashboard.path : authPath.signIn.path),
+        loader: async () => redirect(rootMainPath),
       },
       {
         path: rootAuthPath,

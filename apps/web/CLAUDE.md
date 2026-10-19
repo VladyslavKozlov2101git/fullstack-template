@@ -23,7 +23,7 @@ paths only — never hardcode a host.
 | `src/layouts/`    | `Header`, `Footer`                                                                          |
 | `src/models/`     | types derived from the API contract (`*.model.ts`)                                          |
 | `src/pages/`      | one folder per route                                                                        |
-| `src/redux/`      | `createSlice` slices for non-API global state (`SessionSlice`)                              |
+| `src/redux/`      | `createSlice` slices for non-API global state (none yet)                                    |
 | `src/routes/`     | `paths.ts` (lazy page map) and `routes.tsx` (router tree)                                   |
 | `src/services/`   | `api.ts` (the client + middleware), `cachedAPI.ts` (RTK Query)                              |
 | `src/shared/`     | reusable UI primitives, each re-exported from `src/shared/index.ts`                         |
@@ -43,6 +43,10 @@ add to both or the build and the editor disagree.
 - Server state goes through `src/services/cachedAPI.ts` (RTK Query). Endpoints use `queryFn` calling
   `api`, so request and response types come from the OpenAPI spec. `baseQuery` is `fakeBaseQuery()`
   on purpose — do not add a real one.
+- **The session is the `"Me"` cache entry, not client state.** The cookie is httpOnly, so JS cannot
+  read it and there is nothing to mirror in a slice; `useGetMeQuery()` is who-am-I, and the route
+  guards in `src/containers/` gate on its `isSuccess`/`isError` — never on `isLoading`, which is
+  `false` on the first render.
 - Endpoint missing from `api`? The API changed: `pnpm api:generate` (API must be running). Never
   widen a type to work around it.
 - Model types are derived (`paths["/users"]["get"]…`), never hand-written. See
