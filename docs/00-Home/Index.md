@@ -42,6 +42,7 @@ created from [[Feature|99-Templates/Feature]] during the `build` phase of the
 ## Cross-cutting
 
 - [[Workflow]] — git model, the SDD cycle, agents and hooks
+- [[Known-Gaps]] — what this template does not have yet, verified
 - [[Deploy]] — building and serving it
 
 ## Sources
