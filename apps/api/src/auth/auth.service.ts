@@ -18,7 +18,12 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-  ) {}
+  ) {
+    // Warm the decoy now rather than on the first unknown-email login, which
+    // would otherwise pay for the hash and take twice as long as every other
+    // failed login — the one difference the decoy exists to remove.
+    void decoyDigest();
+  }
 
   async register(dto: RegisterDto): Promise<Session> {
     try {

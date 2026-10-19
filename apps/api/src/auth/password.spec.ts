@@ -33,8 +33,30 @@ describe("password", () => {
   });
 
   it("returns false for a malformed stored value instead of throwing", async () => {
-    for (const stored of ["", "not-a-digest", "scrypt$0$8$1$aa$bb", "scrypt$32768$8$1$aa$bb"]) {
+    const malformed = [
+      "",
+      "not-a-digest",
+      "scrypt$0$8$1$aa$bb",
+      "scrypt$32768$8$1$aa$bb",
+      // scrypt rejects an N that is not a power of two, so this one reaches the
+      // KDF and throws there. A 500 on a corrupt column would say the account
+      // exists, which is the one thing the login path must not say.
+      "scrypt$3$8$1$aa$bb",
+      "bcrypt$32768$8$1$aa$bb",
+      "scrypt$32768$8$1$$",
+    ];
+
+    for (const stored of malformed) {
       expect(await verifyPassword("x", stored)).toBe(false);
     }
+  });
+
+  it("does not cache a failed decoy, so one failure is not permanent", async () => {
+    const { decoyDigest } = await import("./password");
+
+    // Two calls share one computation, and it resolves — a rejected promise
+    // would be handed out forever and only unknown-email logins would break.
+    expect(await decoyDigest()).toBe(await decoyDigest());
+    expect(await decoyDigest()).toMatch(/^scrypt\$/);
   });
 });

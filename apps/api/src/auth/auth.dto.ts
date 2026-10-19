@@ -4,8 +4,9 @@ import { IsEmail, IsNotEmpty, IsString, MaxLength, MinLength } from "class-valid
 
 export const PASSWORD_MIN = 8,
   // scrypt hashes whatever it is given, so an unbounded password is free work
-  // for an attacker. A cap is not rate limiting.
-  PASSWORD_MAX = 72;
+  // for an attacker. A bound, not a bcrypt-style limit — scrypt has none, and
+  // this is high enough that no real passphrase meets it.
+  PASSWORD_MAX = 128;
 
 /**
  * Lower-cased at the boundary, so `A@x.com` and `a@x.com` cannot become two

@@ -36,13 +36,17 @@ export class JwtAuthGuard implements CanActivate {
 
     if (!token) throw new UnauthorizedException();
 
-    let sub: string;
+    let sub: unknown;
     try {
-      ({ sub } = await this.jwt.verifyAsync<{ sub: string }>(token));
+      ({ sub } = await this.jwt.verifyAsync<{ sub?: unknown }>(token));
     } catch {
       // Expired, tampered or signed with another key — all the same answer.
       throw new UnauthorizedException();
     }
+
+    // Checked rather than trusted: a token of ours without a string `sub`
+    // would reach Prisma as `id: undefined` and answer 500 instead of 401.
+    if (typeof sub !== "string") throw new UnauthorizedException();
 
     // Looked up on every request on purpose: a deleted user stops being
     // authenticated immediately instead of when the token runs out.

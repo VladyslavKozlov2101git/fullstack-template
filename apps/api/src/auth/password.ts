@@ -18,9 +18,10 @@ const N = 2 ** 15,
 
 const derive = (plain: string, salt: string, n: number, r: number, p: number) =>
   new Promise<Buffer>((resolve, reject) => {
-    // maxmem is derived from the parameters rather than fixed: 128*N*r is the
-    // real requirement and Node's 32 MB default is exactly what N=2^15 needs,
-    // so a fixed ceiling would reject the very next cost increase.
+    // maxmem is derived from the parameters rather than fixed. 128*N*r is the
+    // requirement, and at these parameters that is 32 MiB — the whole of Node's
+    // default budget, so the derived headroom is what makes the call work at all
+    // and a fixed ceiling would reject the next cost increase outright.
     scrypt(plain, salt, KEY_LENGTH, { N: n, r, p, maxmem: 128 * n * r * 2 }, (error, key) =>
       error ? reject(error) : resolve(key),
     );
@@ -42,20 +43,36 @@ export const verifyPassword = async (plain: string, stored: string): Promise<boo
   const params = [n, r, p].map(Number);
   if (params.some((value) => !Number.isInteger(value) || value < 1)) return false;
 
-  const key = await derive(plain, salt, params[0], params[1], params[2]),
-    expected = Buffer.from(digest, "hex");
+  try {
+    const key = await derive(plain, salt, params[0], params[1], params[2]),
+      expected = Buffer.from(digest, "hex");
 
-  // timingSafeEqual throws RangeError on a length mismatch, which would turn a
-  // malformed column value into a 500 instead of a failed login.
-  return key.length === expected.length && timingSafeEqual(key, expected);
+    // timingSafeEqual throws RangeError on a length mismatch, which would turn a
+    // malformed column value into a 500 instead of a failed login.
+    return key.length === expected.length && timingSafeEqual(key, expected);
+  } catch {
+    // A stored value can be syntactically fine and still unusable — scrypt
+    // rejects an N that is not a power of two, for one. A corrupt column is a
+    // failed login, never a 500, because a 500 here tells the caller that this
+    // account exists.
+    return false;
+  }
 };
 
 /**
- * A digest of a value nobody can present. Verifying against it costs the same
- * as verifying a real one, so the response time of a login with an unknown
- * email does not reveal that the account is missing. Computed once, lazily.
+ * A digest of a value nobody can present. Verifying against it costs the same as
+ * verifying a real one, so a login with an unknown email takes as long as a
+ * login with a known one.
+ *
+ * Computed once. A rejection is NOT kept: caching a failed promise would make
+ * every later unknown-email login throw while known emails still answered 401,
+ * which is exactly the difference this exists to erase. Warmed at startup, so
+ * the first such login does not pay for the hash and stand out by doing so.
  */
 let decoy: Promise<string> | undefined;
 
 export const decoyDigest = (): Promise<string> =>
-  (decoy ??= hashPassword(randomBytes(32).toString("hex")));
+  (decoy ??= hashPassword(randomBytes(32).toString("hex")).catch((error: unknown) => {
+    decoy = undefined;
+    throw error;
+  }));
