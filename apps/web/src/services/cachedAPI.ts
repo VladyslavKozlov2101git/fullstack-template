@@ -92,7 +92,11 @@ export const cachedAPI = createApi({
 
         return { data: undefined };
       },
-      invalidatesTags: ["Me", "Users"],
+      // "Me" only. Invalidating "Users" too would refetch it — and that refetch
+      // leaves without a cookie, gets a 401 from a non-auth path, and triggers
+      // the hard redirect below, turning a sign-out into a full page reload.
+      // The stale list is collected when the page unmounts.
+      invalidatesTags: ["Me"],
     }),
   }),
 });

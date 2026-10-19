@@ -12,6 +12,7 @@ import { authPath } from "../../routes/paths";
 
 import { useGetMeQuery } from "@services/cachedAPI";
 
+import ButtonElement from "@shared/ButtonElement";
 import LoaderComponent from "@shared/LoaderComponent";
 
 interface MainContainerProps {
@@ -28,9 +29,24 @@ interface MainContainerProps {
  * and never pushes a history entry the Back button falls into.
  */
 const MainContainer: FC<MainContainerProps> = ({ className = "" }) => {
-  const { isSuccess, isError } = useGetMeQuery();
+  const { isSuccess, error, refetch } = useGetMeQuery(),
+    // Only a 401 means "signed out". `isError` also covers a 5xx or a dropped
+    // connection, and bouncing a signed-in visitor to the login form over a
+    // transient failure loses their place and tells them something untrue.
+    signedOut = Boolean(error && "status" in error && error.status === 401);
 
-  if (isError) return <Navigate to={authPath.signIn.path} replace />;
+  if (signedOut) return <Navigate to={authPath.signIn.path} replace />;
+
+  if (error) {
+    return (
+      <main className="container page-wrap">
+        <p className="alert" role="alert">
+          Could not check your session.
+        </p>
+        <ButtonElement text="Try again" onClick={() => void refetch()} />
+      </main>
+    );
+  }
 
   if (!isSuccess) return <LoaderComponent />;
 

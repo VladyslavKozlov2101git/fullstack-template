@@ -4,6 +4,17 @@ import { createApiClient } from "@repo/api-client";
 
 import { authPath } from "../routes/paths";
 
+// Matched on the path alone. A test against the whole URL also matches a host
+// called `auth` or a query string like `?next=/auth/x`, and a guarded endpoint
+// that matched would skip the session-expiry redirect below.
+const isAuthEndpoint = (url: string) => {
+  try {
+    return new URL(url).pathname.includes("/auth/");
+  } catch {
+    return false;
+  }
+};
+
 /**
  * The app's single API client. Types come from the OpenAPI spec, so every
  * path, body and response is checked at compile time — import `api` from here,
@@ -27,7 +38,7 @@ api.use({
     // wrong password, or /auth/me reporting that nobody is signed in. Redirecting
     // on those would wipe storage on every failed login and make /auth/sign-up
     // unreachable, since a cold load there calls /auth/me before rendering.
-    if (response.status === 401 && !request.url.includes("/auth/")) {
+    if (response.status === 401 && !isAuthEndpoint(request.url)) {
       localStorage.clear();
       sessionStorage.clear();
       if (window.location.pathname !== authPath.signIn.path) {

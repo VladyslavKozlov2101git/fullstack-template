@@ -55,6 +55,29 @@ describe("SignUp", () => {
     expect(fieldError("Password")).toBeNull();
   });
 
+  it("shows a message that names no field rather than swallowing it", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json(
+          {
+            statusCode: 400,
+            message: ["property nickname should not exist"],
+            error: "Bad Request",
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+
+    renderPage();
+    submit("password1");
+
+    // Routing by field used to key off the status, so any 400 whose message
+    // matched neither field left the form looking like nothing had happened.
+    expect(await screen.findByRole("alert")).toHaveTextContent(/should not exist/i);
+  });
+
   it("puts the password rule on the password field, in the API's own words", async () => {
     vi.stubGlobal(
       "fetch",

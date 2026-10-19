@@ -25,10 +25,12 @@ const SignUp: FC<SignUpProps> = ({ className = "" }) => {
     { status, messages } = apiError(error),
     // The validation pipe answers with one message per broken rule and each one
     // names its own field, so they can land under the input they are about. A
-    // 409 is always the email. Anything else has no field to sit on.
-    emailError = status === 409 ? messages.join(" ") : messages.find((m) => /email/i.test(m)),
-    passwordError = messages.find((m) => /password/i.test(m)),
-    formError = status === 400 || status === 409 ? "" : messages.join(" "),
+    // 409 is always about the email.
+    onEmail = status === 409 ? messages : messages.filter((m) => /email/i.test(m)),
+    onPassword = status === 409 ? [] : messages.filter((m) => /password/i.test(m)),
+    // Whatever matched no field still has to be visible. Keying this off the
+    // status instead would silently drop any message that names neither.
+    onForm = messages.filter((m) => !onEmail.includes(m) && !onPassword.includes(m)),
     submit = (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       // Registering signs the user in, so this takes the same route as a login:
@@ -55,7 +57,7 @@ const SignUp: FC<SignUpProps> = ({ className = "" }) => {
           placeholder="you@example.com"
           required
           value={email}
-          error={emailError}
+          error={onEmail.join(" ")}
           onChange={(event) => setEmail(event.target.value)}
         />
 
@@ -68,13 +70,13 @@ const SignUp: FC<SignUpProps> = ({ className = "" }) => {
           placeholder="At least 8 characters"
           required
           value={password}
-          error={passwordError}
+          error={onPassword.join(" ")}
           onChange={(event) => setPassword(event.target.value)}
         />
 
-        {formError && (
+        {onForm.length > 0 && (
           <p className="alert" role="alert">
-            {formError}
+            {onForm.join(" ")}
           </p>
         )}
 
