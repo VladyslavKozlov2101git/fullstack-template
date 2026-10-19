@@ -1,13 +1,14 @@
 # fullstack-template
 
-pnpm + Turborepo monorepo. NestJS API, React web, VitePress docs, OpenAPI-generated client.
+pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsidian docs vault.
 
 ## Layout
 
 - `apps/api` — NestJS + Prisma (Postgres). Owns the schema; exposes OpenAPI at `/api/docs-json`.
 - `apps/web` — React + Vite. Redux Toolkit + RTK Query, SCSS modules, plop generator. Consumes
   `@repo/api-client`, never hand-writes request types.
-- `apps/docs` — VitePress.
+- `docs/` — the knowledge base: an Obsidian vault. Rules for editing it are `docs/AGENTS.md`; the
+  entry point is `docs/00-Home/Index.md`.
 - `packages/api-client` — generated from the API's OpenAPI spec. **Never edit by hand.**
 - `specs/` — SDD artifacts (one folder per feature).
 

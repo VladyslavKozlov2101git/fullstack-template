@@ -1,7 +1,7 @@
 # fullstack-template
 
-Monorepo template: NestJS API, React SPA, VitePress docs, and a typed API client generated from the
-API's own OpenAPI spec — so a backend contract change breaks the frontend build instead of
+Monorepo template: NestJS API, React SPA, an Obsidian docs vault, and a typed API client generated
+from the API's own OpenAPI spec — so a backend contract change breaks the frontend build instead of
 production.
 
 |                 |                      |
@@ -18,7 +18,7 @@ pnpm install                          # also activates the git hooks
 cp apps/api/.env.example apps/api/.env
 pnpm db:up                            # Postgres in Docker
 pnpm db:migrate                       # apply Prisma migrations
-pnpm dev                              # api :3000, web :5173, docs :5174
+pnpm dev                              # api :3000, web :5173
 ```
 
 |              | URL                            |
@@ -27,7 +27,6 @@ pnpm dev                              # api :3000, web :5173, docs :5174
 | api          | `localhost:3000/api`           |
 | Swagger UI   | `localhost:3000/api/docs`      |
 | OpenAPI spec | `localhost:3000/api/docs-json` |
-| docs         | `localhost:5174`               |
 
 ## Layout
 
@@ -35,9 +34,9 @@ pnpm dev                              # api :3000, web :5173, docs :5174
 apps/
   api/          NestJS 11 + Prisma 6 — owns the DB schema and the HTTP contract
   web/          React 19 + Vite — Redux Toolkit, RTK Query, SCSS modules, plop
-  docs/         VitePress
 packages/
   api-client/   @repo/api-client — generated from the OpenAPI spec, committed, never hand-edited
+docs/           the knowledge base — an Obsidian vault (MOC, ADRs, runbooks, journal)
 specs/          spec-driven-development artifacts (Spec Kit / OpenSpec)
 .claude/        agents, skills and permission rules for Claude Code
 .githooks/      commit-msg + pre-push + pre-commit (no husky)

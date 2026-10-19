@@ -5,3 +5,4 @@ dist/
 *.log
 .vitepress/cache/
 .vitepress/dist/
+docs/.obsidian/

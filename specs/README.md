@@ -16,4 +16,4 @@ Until then, one folder per feature — `specs/NNN-short-slug/` — holding three
 | `tasks.md` | the Plan session | ordered checklist; the first task fixes the API contract |
 
 These names are what the `spec-reviewer` agent looks for. See the
-[workflow page](../apps/docs/workflow.md) for the session-per-phase cycle.
+[workflow page](../docs/06-Cross-cutting/Workflow.md) for the session-per-phase cycle.
