@@ -31,16 +31,16 @@ Commit: `docs: amend 001-auth-login spec for sign-out and users guard`
 
 **Verify:** `pnpm lint` (prettier covers the spec). **Satisfies:** AC-12, AC-14, AC-18, AC-19.
 
-### - [ ] 1. Schema and leak containment
+### - [x] 1. Schema and leak containment
 
 Commit: `feat(api): add user password column and omit it globally`
 
-- [ ] `apps/api/prisma/schema.prisma`: `password String` on `User`
-- [ ] `apps/api/src/prisma.service.ts`: global `omit: { user: { password: true } }` (same commit as
+- [x] `apps/api/prisma/schema.prisma`: `password String` on `User`
+- [x] `apps/api/src/prisma.service.ts`: global `omit: { user: { password: true } }` (same commit as
       the migration, so the hash never leaks through `/users`)
-- [ ] `pnpm --filter api exec prisma migrate status` **before** migrating; if the dev DB was ever
+- [x] `pnpm --filter api exec prisma migrate status` **before** migrating; if the dev DB was ever
       `db push`ed, `migrate dev` offers a reset: tell the user first
-- [ ] `pnpm db:migrate`, name `init_user_with_password` (first migration ever; creates the table)
+- [x] `pnpm db:migrate`, name `init_user_with_password` (first migration ever; creates the table)
 
 **Verify:** `pnpm --filter api typecheck && pnpm lint && pnpm --filter api test` **Satisfies:**
 AC-4, AC-12.
