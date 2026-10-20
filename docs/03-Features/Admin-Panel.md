@@ -97,6 +97,29 @@ Each of these looks arbitrary and is not. Most were found by running the thing, 
   under pnpm's isolation it cannot find `@babel/plugin-syntax-import-assertions`. Making it work
   would mean adding that plugin plus three presets to this app to feed a dev-mode watcher nobody
   wants in production. The adapter's only other job was one `app.use()`.
+- **`ADMIN_JS_SKIP_BUNDLE` is set in code, not left to the environment.** Under
+  `NODE_ENV=production`, `admin.initialize()` runs AdminJS's rollup + babel component bundler
+  unless that flag is `true` (`adminjs/lib/adminjs.js:125`). It dies on the same missing babel
+  plugin described below, and because nothing awaits the promise the rejection is fatal: **the
+  API did not boot at all in production**. Every check during the build ran in development,
+  which is exactly why this was missed until review. There are no custom components to bundle,
+  so the flag loses nothing, and the stub the bundler would have written is served from the
+  module instead. Adding custom components means undoing this and making the bundler work.
+- **`app.set("trust proxy", 1)` in `main.ts` is load-bearing, not hygiene.** express-session
+  refuses to send a Secure cookie unless the connection looks secure — its own check, at
+  `express-session/index.js:242`. nginx terminates TLS and proxies plain http, so without it the
+  login answers 302 with no `Set-Cookie` and the panel bounces back to its form forever on every
+  deployment. The same setting fixes `req.ip`, which the login limiter keys on: behind a proxy
+  every client shares one bucket, so five bad attempts from anyone would lock out every admin.
+- **Secret filters are stripped from `list` and `search`, not just hidden.** `isVisible.filter:
+false` removes the control, not the query. Measured: `filters.password=scrypt` matched every
+  row with a digest and `filters.password=zzzz` matched none, which recovers the salt and digest
+  by blind prefix search. `sortBy` goes the same way.
+- **The allowlist is re-read on every request, not only at login.** Taking someone out of
+  `ADMIN_EMAILS` ends their session on their next click. `jwt-auth.guard.ts` reloads the user
+  every request for the same reason, and a panel that revoked more slowly than the app would be
+  the weaker door. The panel's own session middleware runs first to populate `req.session`; the
+  copy inside the AdminJS router then returns early.
 - **`module: "node20"` in `apps/api/tsconfig.json`.** AdminJS 7 is ESM-only and
   `@adminjs/express`'s exports map declares no `require` condition. Under `module: "commonjs"`
   TypeScript rewrites `await import()` into `require()` and the app dies at boot. `node20` keeps the
@@ -162,6 +185,14 @@ also relaxes the CSP for that path only — see [[Deploy]] for what and why.
       advisories before this feature — and accepted: `User` holds only scalar fields, so no
       rich-text editor is ever instantiated, and the panel sits behind a login. `npm audit fix
 --force` would downgrade AdminJS to 6.8.7, which is not an option.
+- [ ] **Sessions live in `express-session`'s `MemoryStore`.** They are lost on every restart, do
+      not work across more than one instance, and express-session logs a warning about it under
+      `NODE_ENV=production`. Adequate for a handful of admins on one process; a shared store is
+      the upgrade path. The 8-hour `maxAge` bounds how long any of it matters.
+- [ ] **An admin can take over another account.** They can set any user's email to an address in
+      `ADMIN_EMAILS` and then set that row's password. Since an admin can already set anyone's
+      password, this is lateral movement inside the admin role rather than an escalation out of
+      it. Making `email` read-only would close it and break the editing the feature exists for.
 - [ ] **Adding or removing an admin needs a redeploy**, because the allowlist is an environment
       variable. The alternative is a `role` column and the migration that comes with it.
 - [ ] **The deploy path itself does not exist.** There is no Dockerfile, no CI and no hosting target

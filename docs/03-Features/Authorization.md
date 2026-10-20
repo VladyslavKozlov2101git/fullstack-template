@@ -122,6 +122,10 @@ show/hide toggle, because the component falls back to `type` the moment it flips
 - [ ] No password reset, no email confirmation, no refresh-token rotation, no roles. All out of
       scope in the spec, none of them blocked by what shipped.
 
+- [ ] `InputElement`'s `isForgot` prop links to `//auth/sign-in` — a protocol-relative URL pointing
+      at a host called `auth`. Unused here, so it was left alone; it needs a one-character fix
+      before a forgot-password flow uses it.
+
 > [!warning] Contradiction
 > Administrative access exists now, without the roles this page rules out. Was: no roles, no
 > admin gating (`../../specs/001-auth-login/spec.md`). Now: [[Admin-Panel]] gates on an
@@ -129,10 +133,6 @@ show/hide toggle, because the component falls back to `type` the moment it flips
 > of a role and this page is still accurate about the schema — but the sentence above reads as
 > though no administrative distinction exists anywhere, and one does
 > (`../../specs/002-admin-panel/spec.md`).
-
-- [ ] `InputElement`'s `isForgot` prop links to `//auth/sign-in` — a protocol-relative URL pointing
-      at a host called `auth`. Unused here, so it was left alone; it needs a one-character fix
-      before a forgot-password flow uses it.
 
 ## Decisions
 

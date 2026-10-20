@@ -30,8 +30,12 @@ server {
 
     # The AdminJS panel. It is served by the API, not from `root`, so without
     # this block `location /` would hand out index.html and the panel would be
-    # unreachable. No trailing slash on purpose: the entry URL is /admin, which
-    # the panel then redirects to /admin/login.
+    # unreachable.
+    #
+    # A regex location matching the segment exactly, rather than the prefix
+    # `/admin`: the entry URL is /admin with no trailing slash, so `/admin/`
+    # alone would miss it, while a bare `/admin` prefix would also swallow
+    # /administrator and any future /admin-something SPA route.
     #
     # Put an access proxy (Cloudflare Access, Tailscale, a VPN) in front of this
     # path before exposing it. The panel has its own login and a 5-per-5-minutes
@@ -42,7 +46,7 @@ server {
     # inherits add_header only when the current level declares none, so setting
     # the CSP alone would silently drop nosniff, Referrer-Policy and
     # Permissions-Policy on exactly the path that needs them most.
-    location /admin {
+    location ~ ^/admin(/|$) {
         # Two relaxations against the server-level policy, both measured against
         # the real panel rather than guessed:
         #   script-src 'unsafe-inline' — AdminJS inlines two scripts in its page,

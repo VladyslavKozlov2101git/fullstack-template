@@ -39,6 +39,9 @@ answers with `index.html` and the panel is unreachable. Two notes on it:
   Roboto from Google Fonts, so `/admin` gets `script-src 'self' 'unsafe-inline'` plus the font
   origins. Under the server-level policy the panel loads and renders blank. The SPA keeps the
   strict policy.
+- **The API must trust the proxy.** `main.ts` sets `trust proxy` to one hop, which is what makes
+  the panel's Secure session cookie reachable behind TLS termination and what makes its login
+  limiter see real client addresses. If you put more than one proxy in front, raise it.
 - **All four security headers are repeated inside the block.** nginx inherits `add_header` only
   when the current level declares none, so a block that sets just the CSP silently drops
   `nosniff`, `Referrer-Policy` and `Permissions-Policy` on exactly the path that most needs

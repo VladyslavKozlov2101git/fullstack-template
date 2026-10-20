@@ -80,3 +80,33 @@ describe("the edit payload hook", () => {
     await expect(user?.options.actions.edit.before({} as ActionRequest)).resolves.toBeDefined();
   });
 });
+
+describe("the list query hook", () => {
+  const list = (query: Record<string, unknown>) =>
+    user?.options.actions.list.before({ query } as unknown as ActionRequest);
+
+  // Hiding the field from the filter view does not stop the filter being
+  // applied. Measured before this hook existed: `filters.password=scrypt`
+  // matched every row with a digest and `filters.password=zzzz` matched none,
+  // which recovers the salt and digest by blind prefix search.
+  it("drops a flattened filter on a secret field", () => {
+    expect(
+      list({ "filters.password": "scrypt", "filters.email": "ada@example.com" })?.query,
+    ).toEqual({ "filters.email": "ada@example.com" });
+  });
+
+  it("drops a nested filter on a secret field", () => {
+    expect(list({ filters: { password: "scrypt", email: "ada@example.com" } })?.query).toEqual({
+      filters: { email: "ada@example.com" },
+    });
+  });
+
+  it("drops a sort on a secret field but keeps any other sort", () => {
+    expect(list({ sortBy: "password" })?.query).toEqual({});
+    expect(list({ sortBy: "createdAt" })?.query).toEqual({ sortBy: "createdAt" });
+  });
+
+  it("tolerates a request with no query at all", () => {
+    expect(() => user?.options.actions.list.before({} as ActionRequest)).not.toThrow();
+  });
+});

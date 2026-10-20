@@ -56,6 +56,40 @@ const SECRET_FIELDS = new Set(["password"]),
     request.payload.password = await hashPassword(plain);
 
     return request;
+  },
+  /**
+   * Runs before every list and search.
+   *
+   * Hiding a field from the filter *view* does not stop the filter being applied:
+   * AdminJS reads `?filters.<name>=` straight off the query string for any
+   * property the resource has, and `@adminjs/prisma` turns a string into a
+   * `contains`. Measured, not assumed — `filters.password=scrypt` returned every
+   * row with a digest and `filters.password=zzzz` returned none, which is a blind
+   * prefix search that recovers the salt and digest one character at a time.
+   *
+   * The attacker has to be a signed-in admin already, but an admin is precisely
+   * who the suppression exists to keep away from the digest, and a recovered
+   * digest can be cracked offline at leisure. `sortBy` goes too: it is a weaker
+   * oracle, but it is the same field and there is no reason to order by it.
+   */
+  stripSecretQuery = (request: ActionRequest): ActionRequest => {
+    const query = request.query as Record<string, unknown> | undefined;
+
+    if (!query) return request;
+
+    for (const field of SECRET_FIELDS) {
+      // Both shapes: AdminJS flattens query keys, and a nested object arrives
+      // when the request is built by its own frontend.
+      delete query[`filters.${field}`];
+
+      const filters = query.filters as Record<string, unknown> | undefined;
+
+      if (filters) delete filters[field];
+
+      if (query.sortBy === field) delete query.sortBy;
+    }
+
+    return request;
   };
 
 /**
@@ -88,6 +122,8 @@ export const adminResources = (client: PrismaService) =>
         actions: {
           edit: { before: sanitizePayload },
           new: blocksCreate ? { isAccessible: false } : { before: sanitizePayload },
+          list: { before: stripSecretQuery },
+          search: { before: stripSecretQuery },
         },
       },
     };

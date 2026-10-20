@@ -48,16 +48,16 @@ Commit: `chore(api): add adminjs and its express adapter`
 
 ### - [x] 3. Mount and login (backend-only)
 
-Commit: `feat(api): mount a protected adminjs panel at /api/admin`
+Commit: `feat(api): mount a protected adminjs panel at /admin`
 
 - [x] `apps/api/src/admin/`: module; options factory loading `@adminjs/nestjs` via real dynamic
-      `import()`, `rootPath: "/api/admin"`, `inject: [PrismaService]` with a `ponytail:` comment on
-      the third-pool ceiling
+      `import()`, `rootPath: "/admin"`, `inject: [PrismaService]` with a `ponytail:` comment on the
+      third-pool ceiling
 - [x] `authenticate()`: lookup with `omit: { password: false }`, always
       `verifyPassword(password, user?.password ?? await decoyDigest())`, AND allowlist membership
 - [x] Allowlist predicate: entries trimmed and lower-cased, email lower-cased, empty/unset/blank
       grants nobody
-- [x] Session cookie: distinct name, `path: "/api/admin"`, `httpOnly`, `sameSite: "lax"`,
+- [x] Session cookie: distinct name, `path: "/admin"`, `httpOnly`, `sameSite: "lax"`,
       `secure: process.env.NODE_ENV !== "development"`, written inline
 - [x] `ADMIN_SESSION_SECRET` read **inside the async factory**, not at module scope, and throws
       there if missing. `main.ts` calls `process.loadEnvFile()` inside `bootstrap()`, while the ES
@@ -94,44 +94,25 @@ Commit: `feat(api): register admin resources from the prisma schema`
 - [x] Build the resource list by iterating Prisma DMMF, not a hand-kept list; split into its own
       file if the options file nears `max-lines: 250`
 - [x] `password` invisible in list/show/edit/filter and write-protected on every resource
-
 - [x] `isVisible: false` is not enough on its own: AdminJS forwards an arbitrary request body to the
       adapter, so a `before` hook on edit and new drops the suppressed keys from the payload.
       Without it a hand-made POST writes a plaintext password and locks the account out of login
 - [x] Create is closed on any model whose suppressed field is required with no default, since it
       could only ever fail at the database. Users are created by POST /api/auth/register
-- [x] One regression test (`admin-resources.spec.ts`): the list matches the DMMF model list, the
+- [x] Regression tests in `admin-resources.spec.ts`: the list matches the DMMF model list, the
       digest is hidden, a smuggled password is dropped, and create is closed
 
-**Verify (AC-4):** read the stored digest for a user, edit that user's `name` through the panel,
-re-read the digest, confirm it is byte-identical. Confirm `password` appears in no view. Confirmed
-by hand against Postgres: the record params are `id, email, name, createdAt` with no `password`; an
-edit carrying `password=totally-plaintext-pwned` changed `name` and left the digest byte-identical
-and still in `scrypt### - [x] 4. Resources from DMMF, `password` suppressed (backend-only)
+**Verify (AC-4):** confirmed by hand against Postgres. The record params are
+`id, email, name, createdAt` with no `password`. An edit carrying a smuggled plaintext value changed
+`name` and left the digest byte-identical and still in `scrypt$` form; the edited user still signs
+in through `POST /api/auth/login`; dotted, bracketed and case-variant keys were tried too and Prisma
+rejects them, so the digest survived all of them; create answers `ForbiddenError` and writes no row;
+delete works. Note that `isAccessible: false` answers HTTP 200 with an error body rather than 403 —
+that is AdminJS's JSON-API convention, not a failure. **Satisfies:** AC-3, AC-4, AC-6.
 
-Commit: `feat(api): register admin resources from the prisma schema`
+### - [x] 5. Set a password from the panel (backend-only)
 
-- [x] Build the resource list by iterating Prisma DMMF, not a hand-kept list; split into its own
-      file if the options file nears `max-lines: 250`
-- [x] `password` invisible in list/show/edit/filter and write-protected on every resource
-
-- [x] `isVisible: false` is not enough on its own: AdminJS forwards an arbitrary request body to the
-      adapter, so a `before` hook on edit and new drops the suppressed keys from the payload.
-      Without it a hand-made POST writes a plaintext password and locks the account out of login
-- [x] Create is closed on any model whose suppressed field is required with no default, since it
-      could only ever fail at the database. Users are created by POST /api/auth/register
-- [x] One regression test (`admin-resources.spec.ts`): the list matches the DMMF model list, the
-      digest is hidden, a smuggled password is dropped, and create is closed
-
-**Verify (AC-4):** read the stored digest for a user, edit that user's `name` through the panel,
-re-read the digest, confirm it is byte-identical. Confirm `password` appears in no view. form; the
-edited user still signs in through `POST /api/auth/login`; create answers `ForbiddenError` and
-writes no row; delete works. Note `isAccessible: false` answers HTTP 200 with an error body rather
-than 403 — that is AdminJS's JSON-API convention, not a failure. **Satisfies:** AC-3, AC-4, AC-6.
-
-### - [x] 5. Set-password action (backend-only)
-
-Commit: `feat(api): add a set-password action to the admin panel`
+Commit: `feat(api): let an admin set a new password from the panel`
 
 - [x] Separate explicit action taking a new plaintext value
 - [x] Validate against `PASSWORD_MIN`/`PASSWORD_MAX` imported from `apps/api/src/auth/auth.dto.ts`
@@ -168,11 +149,13 @@ Commit: `fix(web): allow the admin panel through the CSP`
       would let it fall through to the SPA
 - [x] A note in the block that an access proxy belongs in front of this path before it is exposed
 
-**Verify:** run against a real nginx (nginx:alpine in Docker, proxying to the live API), not just
-read. `nginx -t` passes. Through the proxy: `/admin/login` answers 200 carrying the relaxed CSP
-**and** all four security headers, which is the inheritance trap handled; `/` carries the strict
-`script-src 'self'` untouched; all four panel bundles answer 200; `/admin` with no trailing slash
-answers 302 to `/admin/login`; `/` and `/api/health` still route as before. **Satisfies:** AC-10.
+**Verify:** run over plain http against a real nginx (nginx:alpine in Docker, proxying to the live
+API), so this covered routing and headers but not the Secure-cookie path — which is how the
+`trust proxy` defect in task 8 survived this far. Not just read. `nginx -t` passes. Through the
+proxy: `/admin/login` answers 200 carrying the relaxed CSP **and** all four security headers, which
+is the inheritance trap handled; `/` carries the strict `script-src 'self'` untouched; all four
+panel bundles answer 200; `/admin` with no trailing slash answers 302 to `/admin/login`; `/` and
+`/api/health` still route as before. **Satisfies:** AC-10.
 
 ### - [x] 7. Docs
 
@@ -183,8 +166,8 @@ Commit: `docs: document the admin panel`
 - [x] Link it from `[[Index]]` and the Features MOC
 - [x] `docs/03-Features/Authorization.md`: `> [!warning] Contradiction` callout against its "no
       roles" line
-- [x] `docs/05-Runbooks/Deploy.md`: Cloudflare Access recipe, `/api/admin` reachability note, the
-      two new env vars, and the CSP justification
+- [x] `docs/05-Runbooks/Deploy.md`: Cloudflare Access recipe, `/admin` reachability note, the two
+      new env vars, and the CSP justification
 - [x] `docs/02-Architecture/Backend.md`: module in the `src/` layout block and feature list
 - [x] `docs/01-Onboarding/Tech-stack.md`: justify the deps; `Local-setup.md`: panel URL
 - [x] `docs/journal/2026-10-20.md`: append `- HH:MM · {ingest|dev|lint|decision} · …`
@@ -208,15 +191,50 @@ contradiction it lists is the callout deliberately added to `Authorization.md`, 
 `docs/AGENTS.md` says to leave until a human closes it. `pnpm lint`, `pnpm typecheck`,
 `pnpm pages:lint` and 33/33 tests all green. **Satisfies:** AC-12.
 
-### - [ ] 8. Review and PR
+### - [x] 8. Review and PR
 
-No code commit unless review finds something.
+`spec-reviewer` and `reviewer` run in parallel. Between them they found four real defects, none of
+which the build had caught — every check during it ran with `NODE_ENV=development`, and three of the
+four only appear outside it.
 
-- [ ] Run `spec-reviewer` and `reviewer` in parallel; fix findings, one commit each
-- [ ] `pnpm lint && pnpm typecheck && pnpm test`
+- [x] **The API did not boot at all under `NODE_ENV=production`.** `admin.initialize()` runs
+      AdminJS's component bundler unless `ADMIN_JS_SKIP_BUNDLE=true`, it dies on the missing babel
+      plugin, and nothing awaits the promise, so the rejection is fatal. Flag now set in code, with
+      the stub the bundler would have written served from the module. Found while verifying another
+      finding, not reported by either reviewer
+- [x] **`trust proxy` was unset, so the panel could never hold a session behind nginx.**
+      express-session refuses a Secure cookie on a connection that does not look secure
+      (`express-session/index.js:242`). Measured both ways: with `X-Forwarded-Proto: https` the
+      cookie now arrives `HttpOnly; Secure; SameSite=Lax`; over plain http there is no `Set-Cookie`
+      at all, which is the login loop every deployment would have hit. The same setting fixes
+      `req.ip` for the login limiter, where one attacker's five failures locked out every admin
+- [x] **The digest was readable through list filters.** Measured: `filters.password=scrypt` matched
+      every row with a digest, `filters.password=zzzz` matched none — a blind prefix search.
+      Stripped from `list` and `search` along with `sortBy`, with tests; both queries now return the
+      same row count
+- [x] **The body-parser exclusion was case-sensitive while Express routing is not.**
+      `POST /ADMIN/login` reached the panel but kept Nest's parser, so express-formidable waited on
+      a drained stream and the connection hung, without logging in. Now case-insensitive and
+      segment-exact in `admin-path.ts`, with tests; it answers in 0.17s
+- [x] Also fixed: a minimum length on `ADMIN_SESSION_SECRET`, an 8-hour session `maxAge`, the
+      allowlist re-read per request so revoking an admin ends their session, `nginx` matching the
+      `/admin` segment exactly rather than by prefix, and `ADMIN_ROOT_PATH` moved out of the Nest
+      module so `main.ts` does not import it
+- [x] Accepted rather than fixed, and recorded in `spec.md` and
+      [docs/03-Features/Admin-Panel.md](../../docs/03-Features/Admin-Panel.md): the in-memory
+      session store, and an admin being able to take over another account through the email field
+- [x] Artefacts repaired: task 4 in this file had been duplicated mid-sentence by one of my own
+      patches, and `/api/admin` survived decision 2's revision in the spec, the plan, this file and
+      `.env.example`
+- [x] Disagreed with, with reasons: `express` is pinned exactly **because** a caret range produced
+      two copies of the framework — the lockfile now resolves one. `isolatedModules` does not stop
+      ts-jest type-checking; `tsc --noEmit` runs separately regardless. `tslib` is unused by our
+      code but is a declared peer of `@adminjs/express`, so it stays. Payload key variants
+      (`password.x`, `password[0]`, case changes) were tested and Prisma rejects them
 - [ ] Open PR into `development`; the user's approval is the remaining checkpoint
 
-**Verify:** `pnpm lint && pnpm typecheck && pnpm test`. **Satisfies:** all, as a final pass (AC-9).
+**Verify:** `pnpm lint && pnpm typecheck && pnpm test` plus `pnpm docs:lint` and `pnpm pages:lint`.
+49 tests. **Satisfies:** all, as a final pass (AC-9).
 
 ## Notes
 

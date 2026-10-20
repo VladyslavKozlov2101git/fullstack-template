@@ -48,6 +48,13 @@ the real API against a real Postgres, so the contract loop in [[System-overview]
 type system but never at runtime — the auth routes in
 [[Authorization]] were checked by hand with `curl`, which is not a thing CI can repeat.
 
+## The admin panel keeps sessions in memory
+
+[[Admin-Panel]] uses express-session's default `MemoryStore`. Admin sessions are lost on every
+restart, do not work across more than one instance, and express-session logs a warning about it
+in production. It is adequate for a handful of admins on one process and it is the reason the
+panel cannot be scaled horizontally as it stands. A shared store closes it.
+
 ## Sensitive fields are hidden by name, not by a check
 
 [[Admin-Panel]] generates its screens from the Prisma schema, so a new model is exposed the
@@ -59,6 +66,7 @@ next one will be. A lint rule or a naming convention with a hook would close thi
 
 ## The deploy path is untested
 
-See the callout in [[Deploy]]. [[Admin-Panel]] inherits this one whole: it is built and verified
-locally, including through a real nginx, but the environment the request asked for does not
+See the callout in [[Deploy]]. [[Admin-Panel]] inherits this one whole. It was verified locally,
+including through a real nginx and with `NODE_ENV=production`, but over plain http — so the TLS
+half of the deployment is still unexercised, and the environment the request asked for does not
 exist yet.
