@@ -32,13 +32,17 @@ incl. the digest-parameter assertion at `password.spec.ts:32`); `pnpm --filter a
 api, confirm `/api/docs-json` responds; `pnpm api:generate` then
 `git diff --exit-code packages/api-client/src/schema.d.ts`. **Satisfies:** AC-7, AC-8, AC-9.
 
-### - [ ] 2. Dependencies (backend-only)
+### - [x] 2. Dependencies (backend-only)
 
 Commit: `chore(api): add adminjs and its express adapter`
 
-- [ ] `pnpm --filter api add adminjs @adminjs/prisma @adminjs/nestjs @adminjs/express express-session express-formidable`
+- [x] `pnpm --filter api add adminjs @adminjs/prisma @adminjs/nestjs @adminjs/express express-session express-formidable`
 - `@adminjs/express` and `express-session` are required by the Nest adapter's Express loader and are
   not installed transitively. Adds roughly 500 packages: an accepted cost recorded in the spec.
+- [x] `express`, `express-formidable` and `tslib` added too: all three are peers of
+      `@adminjs/express`, which has no dependencies of its own
+- [x] `express` pinned to exactly `5.2.1` to match Nest, after a caret range produced two copies of
+      express in one process. Actual growth was +375 packages, not ~500
 
 **Verify:** the api still boots; `pnpm --filter api typecheck`. **Satisfies:** supports AC-8.
 

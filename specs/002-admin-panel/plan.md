@@ -90,6 +90,12 @@ silently drops `X-Content-Type-Options`, `Referrer-Policy` and `Permissions-Poli
 `proxy_pass` and the four `proxy_set_header` lines copied from `location /api/` (:23-29). Being a
 longer prefix, `location /api/admin/` wins over `location /api/`.
 
+**`express` is pinned exactly, not ranged.** `@adminjs/express` takes `express` as a peer
+(`>=4.18.2`), and `@nestjs/platform-express` 11.2.7 pins `express` at `5.2.1`. A caret range
+resolves to the newest 5.x and puts a second copy of the whole framework in one process, with the
+adapter bound to one and the running app to the other. `apps/api` therefore declares
+`"express": "5.2.1"`. Revisit when Nest bumps its own pin.
+
 **File size.** `.oxlintrc.json:30` enforces `max-lines: 250`. If the AdminJS options outgrow one
 file, split the resource-building code from the module wiring.
 
