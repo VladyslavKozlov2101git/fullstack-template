@@ -44,7 +44,7 @@ anything that must not slip belongs in a hook or a permission rule, not in prose
 | rules  | this file + per-app `CLAUDE.md`               | always loaded; short and always true                                                                                             |
 | skills | `.claude/skills/`, `apps/api/.claude/skills/` | procedures, loaded on demand — `feature` (the SDD pipeline), `nest-module`, `prisma-migration`                                   |
 | agents | `.claude/agents/`                             | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `test-runner`, `doc-writer` (writes spec/plan/tasks, sonnet) |
-| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck or lint are red                                   |
+| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck, lint or `pages:lint` are red                     |
 
 `check.sh` skips turns that changed no `.ts`/`.tsx`, and gives up after three blocked attempts so a
 session can never be trapped. Both hooks are plain `sh` and read their payload with node — this

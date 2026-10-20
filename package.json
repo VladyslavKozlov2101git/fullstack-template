@@ -14,7 +14,8 @@
     "db:up": "docker compose up -d",
     "db:migrate": "pnpm --filter api exec prisma migrate dev",
     "api:generate": "pnpm --filter @repo/api-client generate",
-    "docs:lint": "node scripts/docs-lint.mjs"
+    "docs:lint": "node scripts/docs-lint.mjs",
+    "pages:lint": "node scripts/pages-lint.mjs"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",

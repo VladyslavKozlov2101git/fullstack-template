@@ -58,6 +58,12 @@ add to both or the build and the editor disagree.
 - Native platform before a dependency: `<dialog>`, `<details>`, `<input type="date">`, CSS Grid,
   `URLSearchParams`, `Intl`. React 19 hoists `<title>`/`<meta>` from a component, so no helmet
   library.
+- **Every page renders its own `<title>` and `<meta name="description">`**, as the first two nodes
+  of its returned fragment. Title is `Page name | App`; the description is one sentence, written for
+  a search result, not a copy of the heading. A page with several `return` branches gets one shared
+  wrapper rather than metadata per branch — otherwise a branch loses it. `ErrorPage` is the only
+  page that also sets `<meta name="robots" content="noindex">`. Copy the pair from an existing page
+  when adding one — `pnpm pages:lint` fails if you forget, and the Stop hook runs it.
 - SCSS modules for component styles; global classes (`container`, `card-wrap`, `table`, `flex`, …)
   live in `assets/styles/main.scss`. Check there before writing new utility CSS.
 - `clsx` for conditional classes, not template strings.

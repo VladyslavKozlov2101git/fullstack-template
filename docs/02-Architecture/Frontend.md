@@ -44,6 +44,13 @@ Every component is a folder of three files — `Name.tsx`, `Name.module.scss`, `
 aliases (`@app`, `@shared`, `@services`, …) are declared in **both**
 `vite.config.ts` and `tsconfig.json`; add to both or the build and the editor disagree.
 
+## Page metadata
+
+Every page under `pages/` renders its own `<title>` and `<meta name="description">`. React 19
+hoists both into `<head>`, so there is no helmet dependency. `ErrorPage` adds
+`<meta name="robots" content="noindex">` — an error is nothing to rank. `pnpm pages:lint` enforces
+the pair and the Stop hook runs it, so a page cannot ship without metadata.
+
 Details and the full rule list: `apps/web/CLAUDE.md`.
 
 ## Features touching this app

@@ -41,6 +41,7 @@ const SignUp: FC<SignUpProps> = ({ className = "" }) => {
   return (
     <>
       <title>Sign up | App</title>
+      <meta name="description" content="Create an account to get started." />
       <form
         className={clsx(styles.root, className, "card-wrap")}
         onSubmit={submit}
