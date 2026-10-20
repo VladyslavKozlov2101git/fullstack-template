@@ -152,20 +152,27 @@ Commit: `feat(api): add a set-password action to the admin panel`
 `POST /api/auth/login` with 200 and the old one gets 401. A too-short value comes back as a
 field-level error on `newPassword` and changes nothing. **Satisfies:** AC-5.
 
-### - [ ] 6. nginx CSP block (frontend-side config; no `apps/api` file)
+### - [x] 6. nginx CSP block (frontend-side config; no `apps/api` file)
 
 Commit: `fix(web): allow the admin panel through the CSP`
 
-- [ ] `apps/web/conf/dev.nginx`: add `location /admin/` with `proxy_pass` and the four
+- [x] `apps/web/conf/dev.nginx`: add `location /admin/` with `proxy_pass` and the four
       `proxy_set_header` lines copied from `location /api/`
-- [ ] Restate all four security headers in the block (nginx drops inherited `add_header` when a
+- [x] Restate all four security headers in the block (nginx drops inherited `add_header` when a
       level declares its own)
-- [ ] CSP relaxed exactly as far as needed: `script-src 'self' 'unsafe-inline'`, `style-src` plus
+- [x] CSP relaxed exactly as far as needed: `script-src 'self' 'unsafe-inline'`, `style-src` plus
       `https://fonts.googleapis.com`, `font-src 'self' https://fonts.gstatic.com`; comment why,
       referencing the inline `REDUX_STATE`/`createRoot` scripts
 
-**Verify:** with the config applied the panel renders rather than appearing blank, and the SPA's own
-responses still carry the strict `script-src 'self'`. **Satisfies:** AC-10.
+- [x] `location /admin`, with no trailing slash: the entry URL is `/admin`, and a `/admin/` block
+      would let it fall through to the SPA
+- [x] A note in the block that an access proxy belongs in front of this path before it is exposed
+
+**Verify:** run against a real nginx (nginx:alpine in Docker, proxying to the live API), not just
+read. `nginx -t` passes. Through the proxy: `/admin/login` answers 200 carrying the relaxed CSP
+**and** all four security headers, which is the inheritance trap handled; `/` carries the strict
+`script-src 'self'` untouched; all four panel bundles answer 200; `/admin` with no trailing slash
+answers 302 to `/admin/login`; `/` and `/api/health` still route as before. **Satisfies:** AC-10.
 
 ### - [ ] 7. Docs
 
