@@ -46,33 +46,46 @@ Commit: `chore(api): add adminjs and its express adapter`
 
 **Verify:** the api still boots; `pnpm --filter api typecheck`. **Satisfies:** supports AC-8.
 
-### - [ ] 3. Mount and login (backend-only)
+### - [x] 3. Mount and login (backend-only)
 
 Commit: `feat(api): mount a protected adminjs panel at /api/admin`
 
-- [ ] `apps/api/src/admin/`: module; options factory loading `@adminjs/nestjs` via real dynamic
+- [x] `apps/api/src/admin/`: module; options factory loading `@adminjs/nestjs` via real dynamic
       `import()`, `rootPath: "/api/admin"`, `inject: [PrismaService]` with a `ponytail:` comment on
       the third-pool ceiling
-- [ ] `authenticate()`: lookup with `omit: { password: false }`, always
+- [x] `authenticate()`: lookup with `omit: { password: false }`, always
       `verifyPassword(password, user?.password ?? await decoyDigest())`, AND allowlist membership
-- [ ] Allowlist predicate: entries trimmed and lower-cased, email lower-cased, empty/unset/blank
+- [x] Allowlist predicate: entries trimmed and lower-cased, email lower-cased, empty/unset/blank
       grants nobody
-- [ ] Session cookie: distinct name, `path: "/api/admin"`, `httpOnly`, `sameSite: "lax"`,
+- [x] Session cookie: distinct name, `path: "/api/admin"`, `httpOnly`, `sameSite: "lax"`,
       `secure: process.env.NODE_ENV !== "development"`, written inline
-- [ ] `ADMIN_SESSION_SECRET` read **inside the async factory**, not at module scope, and throws
+- [x] `ADMIN_SESSION_SECRET` read **inside the async factory**, not at module scope, and throws
       there if missing. `main.ts` calls `process.loadEnvFile()` inside `bootstrap()`, while the ES
       import of `AppModule` is hoisted above it, so a module-scope read runs before `.env` is loaded
       and throws even when the var is set. `auth.module.ts:27` reads `JWT_SECRET` inside
       `useFactory` for this reason
-- [ ] `apps/api/.env.example`: `ADMIN_EMAILS`, `ADMIN_SESSION_SECRET`; set both in the local `.env`
-- [ ] `apps/api/src/app.module.ts`: import the module
-- [ ] One `*.spec.ts` for the allowlist predicate: empty/unset env grants nobody, entries trimmed
+- [x] `apps/api/.env.example`: `ADMIN_EMAILS`, `ADMIN_SESSION_SECRET`; set both in the local `.env`
+- [x] `apps/api/src/app.module.ts`: import the module
+- [x] One `*.spec.ts` for the allowlist predicate: empty/unset env grants nobody, entries trimmed
       and case-folded, a non-listed address refused
 
-**Verify:** tests and typecheck green; by hand: `/api/admin` serves the login page; a listed email
-with the right password gets in; a listed email with a wrong password does not; an unlisted email
-with the right password does not; unset `ADMIN_EMAILS` admits nobody. **Satisfies:** AC-1, AC-2,
-AC-11.
+Deviations from the plan, all forced by what the code did:
+
+- [x] Mounted via `@adminjs/express` and `HttpAdapterHost`, not `@adminjs/nestjs`, whose
+      `admin.watch()` cannot bundle under pnpm; `@adminjs/nestjs` removed from the dependencies
+- [x] Root path is `/admin`, not `/api/admin`: AdminJS cannot serve a nested root correctly
+- [x] 14 `@tiptap/*` packages pinned to 2.1.13 in `pnpm-workspace.yaml`, or the process dies at boot
+- [x] Panel assets re-registered with `dotfiles: "allow"`, since pnpm's `.pnpm` directory makes
+      `res.sendFile` 404 every bundle and the page renders blank
+- [x] `main.ts`: `bodyParser: false` plus json and urlencoded that skip `/admin`, or the login POST
+      hangs forever
+- [x] `maxRetries: { count: 5, duration: 300 }` on the login, which closes the rate-limiting risk
+      the spec recorded
+
+**Verify:** tests and typecheck green; by hand, every case confirmed: `/admin` serves the login page
+and all five frontend bundles return 200; a listed email with the right password gets in; a listed
+email with a wrong password does not; an unlisted email with the right password does not; unset
+`ADMIN_EMAILS` admits nobody. **Satisfies:** AC-1, AC-2, AC-11.
 
 ### - [ ] 4. Resources from DMMF, `password` suppressed (backend-only)
 
@@ -101,7 +114,7 @@ sign in through `POST /api/auth/login` with the new password. **Satisfies:** AC-
 
 Commit: `fix(web): allow the admin panel through the CSP`
 
-- [ ] `apps/web/conf/dev.nginx`: add `location /api/admin/` with `proxy_pass` and the four
+- [ ] `apps/web/conf/dev.nginx`: add `location /admin/` with `proxy_pass` and the four
       `proxy_set_header` lines copied from `location /api/`
 - [ ] Restate all four security headers in the block (nginx drops inherited `add_header` when a
       level declares its own)

@@ -7,3 +7,27 @@ onlyBuiltDependencies:
   - "@prisma/engines"
   - prisma
   - esbuild
+
+# AdminJS's design system (@adminjs/design-system@4.1.1) pins every @tiptap/*
+# package it names at exactly 2.1.13, but @tiptap/starter-kit@2.1.13 pulls its
+# own sub-extensions with caret ranges, which resolve to 2.27.x. Those import
+# `canInsertNode` from @tiptap/core, which 2.1.13 does not export, and the API
+# dies on boot inside AdminModule.onModuleInit with a SyntaxError — not a
+# warning, a crash. Pin them to the version the rest of the stack is built
+# against. Drop this block if AdminJS ever ships a design system with
+# consistent ranges.
+overrides:
+  "@tiptap/extension-blockquote": "2.1.13"
+  "@tiptap/extension-bold": "2.1.13"
+  "@tiptap/extension-bullet-list": "2.1.13"
+  "@tiptap/extension-code-block": "2.1.13"
+  "@tiptap/extension-dropcursor": "2.1.13"
+  "@tiptap/extension-gapcursor": "2.1.13"
+  "@tiptap/extension-hard-break": "2.1.13"
+  "@tiptap/extension-history": "2.1.13"
+  "@tiptap/extension-horizontal-rule": "2.1.13"
+  "@tiptap/extension-italic": "2.1.13"
+  "@tiptap/extension-list-item": "2.1.13"
+  "@tiptap/extension-ordered-list": "2.1.13"
+  "@tiptap/extension-paragraph": "2.1.13"
+  "@tiptap/extension-strike": "2.1.13"

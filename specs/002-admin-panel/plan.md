@@ -52,6 +52,22 @@ cannot set a password that registration would refuse.
 allowlist membership. This mirrors the equal-cost path at `apps/api/src/auth/auth.service.ts:52`.
 Checking the allowlist first and returning early would leak by timing which addresses are admins.
 
+## Revised during build
+
+Four decisions in this plan turned out to be wrong once the code ran. Each is recorded as a risk in
+`spec.md` and commented at the point of use in the code.
+
+1. **`@adminjs/nestjs` is unusable here.** `admin.watch()` runs a babel bundler in-process and
+   cannot resolve its own plugins under pnpm. Mounted through `@adminjs/express` and
+   `HttpAdapterHost` instead, which also removed the `reflect-metadata` duplicate.
+2. **`/api/admin` is impossible.** AdminJS builds its frontend path set from the last segment of
+   `rootPath`, so a nested mount serves a panel that posts to paths the server does not serve. The
+   mount is `/admin`, and nginx needs its own location block for it.
+3. **`@tiptap/*` must be pinned.** `starter-kit` resolves sub-extensions that import a symbol the
+   pinned core does not export, which kills the process at boot.
+4. **Nest's body parser must skip the panel.** `express-formidable` hangs on an already-consumed
+   stream, so `main.ts` now owns body parsing and excludes `/admin`.
+
 ## Approach
 
 **Allowlist matching is case-insensitive on both sides.** `auth.dto.ts` lower-cases email at the
