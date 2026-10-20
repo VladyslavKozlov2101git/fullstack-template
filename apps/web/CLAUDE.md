@@ -6,8 +6,6 @@ paths only — never hardcode a host.
 ## Commands
 
 - `pnpm --filter web dev` / `build` / `test` / `typecheck`
-- `pnpm plop` — scaffold a component (tsx + module.scss + index.ts) into `pages`, `shared` or
-  `components`
 - `pnpm lint` / `pnpm lint:fix` / `pnpm format` — run from the repo root, they cover the whole
   workspace
 
@@ -17,7 +15,7 @@ paths only — never hardcode a host.
 | ----------------- | ------------------------------------------------------------------------------------------- |
 | `src/app/`        | store, rootReducer, typed redux hooks, `App.tsx`                                            |
 | `src/assets/`     | `icons/` (React components), `styles/` (global SCSS: reset, vars, mixins, main)             |
-| `src/components/` | presentational components with no logic (created on demand by plop)                         |
+| `src/components/` | presentational components with no logic                                                     |
 | `src/containers/` | smart layout shells that own auth gating and `<Outlet/>` — `AuthContainer`, `MainContainer` |
 | `src/helpers/`    | `functions.ts`, `hooks.ts`, `vars.ts`                                                       |
 | `src/layouts/`    | `Header`, `Footer`                                                                          |
@@ -30,7 +28,7 @@ paths only — never hardcode a host.
 | `src/tests/`      | vitest setup                                                                                |
 
 Component folder convention — `Name/Name.tsx`, `Name/Name.module.scss`, `Name/index.ts` (default
-re-export). Use `pnpm plop` instead of writing the three by hand.
+re-export). Copy the nearest existing component rather than inventing a fourth file.
 
 Path aliases (`@app`, `@shared`, `@services`, `@pages`, `@redux`, `@models`, `@helpers`, `@layouts`,
 `@containers`, `@assets`, `@routes`) are declared in **both** `vite.config.ts` and `tsconfig.json` —

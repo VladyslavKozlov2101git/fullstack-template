@@ -5,8 +5,8 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 ## Layout
 
 - `apps/api` — NestJS + Prisma (Postgres). Owns the schema; exposes OpenAPI at `/api/docs-json`.
-- `apps/web` — React + Vite. Redux Toolkit + RTK Query, SCSS modules, plop generator. Consumes
-  `@repo/api-client`, never hand-writes request types.
+- `apps/web` — React + Vite. Redux Toolkit + RTK Query, SCSS modules. Consumes `@repo/api-client`,
+  never hand-writes request types.
 - `docs/` — the knowledge base: an Obsidian vault. Rules for editing it are `docs/AGENTS.md`; the
   entry point is `docs/00-Home/Index.md`.
 - `packages/api-client` — generated from the API's OpenAPI spec. **Never edit by hand.**
@@ -23,7 +23,6 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 | `pnpm build` / `test` / `typecheck` | across the workspace                    |
 | `pnpm api:generate`                 | regenerate client (API must be running) |
 | `pnpm lint` / `lint:fix` / `format` | oxlint + oxfmt + prettier, whole repo   |
-| `pnpm plop`                         | scaffold a web component                |
 
 ## Rules
 

@@ -40,8 +40,8 @@ presentational) · `containers/` (auth-gated layout shells) · `helpers/` · `la
 Footer) · `models/` (types derived from the contract) · `pages/` (one folder per route) · `redux/` ·
 `routes/` · `services/` · `shared/` (UI primitives) · `tests/`.
 
-Every component is a folder of three files — `Name.tsx`, `Name.module.scss`, `index.ts` — generated
-with `pnpm plop`. Path aliases (`@app`, `@shared`, `@services`, …) are declared in **both**
+Every component is a folder of three files — `Name.tsx`, `Name.module.scss`, `index.ts`. Path
+aliases (`@app`, `@shared`, `@services`, …) are declared in **both**
 `vite.config.ts` and `tsconfig.json`; add to both or the build and the editor disagree.
 
 Details and the full rule list: `apps/web/CLAUDE.md`.

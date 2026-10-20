@@ -27,8 +27,7 @@ Nest and well-proven on 5.x.
 ## apps/web — see [[Frontend]]
 
 React 19, Vite 8, TypeScript 7, Redux Toolkit + RTK Query, SCSS modules, `react-router` 8, `clsx`,
-`react-hot-toast`, `react-loading-skeleton`, plop for component scaffolding, vitest + Testing
-Library.
+`react-hot-toast`, `react-loading-skeleton`, vitest + Testing Library.
 
 ## packages/api-client
 

@@ -11,7 +11,6 @@
     "lint": "oxlint -c .oxlintrc.json",
     "lint:fix": "oxlint -c .oxlintrc.json --fix",
     "format": "prettier --write .",
-    "plop": "pnpm --filter web plop",
     "db:up": "docker compose up -d",
     "db:migrate": "pnpm --filter api exec prisma migrate dev",
     "api:generate": "pnpm --filter @repo/api-client generate",
