@@ -60,7 +60,10 @@ Things that will look odd later and are deliberate:
 - **`PrismaService` omits `password` globally.** Without it `user.findMany()` returns the digest,
   Prisma's `User` is structurally assignable to `UserDto`, and `GET /users` serves every hash while
   `tsc` stays happy. The auth service opts back in with `omit: { password: false }` exactly where it
-  needs to verify a login. Exposure is now explicit and local.
+  needs to verify a login. Exposure is now explicit and local. The omit is a client
+  option, though, so it governs queries and not tooling that reads the schema — [[Admin-Panel]]
+  suppresses the field again on its own side, because `@adminjs/prisma` builds its field list
+  from Prisma's DMMF.
 - **scrypt runs at `N=2^15`, below OWASP's `N=2^17` floor.** 2^17 costs ~134 MB per hash, and with
   no rate limiting on login (see Open questions) an expensive KDF is a memory-exhaustion lever
   rather than a defence. Digests are stored as `scrypt$N$r$p$salt$digest`, so the parameters travel
@@ -118,6 +121,15 @@ show/hide toggle, because the component falls back to `type` the moment it flips
       closing it means a CAPTCHA or an invite flow, not a change to the login path.
 - [ ] No password reset, no email confirmation, no refresh-token rotation, no roles. All out of
       scope in the spec, none of them blocked by what shipped.
+
+> [!warning] Contradiction
+> Administrative access exists now, without the roles this page rules out. Was: no roles, no
+> admin gating (`../../specs/001-auth-login/spec.md`). Now: [[Admin-Panel]] gates on an
+> `ADMIN_EMAILS` environment variable rather than a column, so the database still has no notion
+> of a role and this page is still accurate about the schema — but the sentence above reads as
+> though no administrative distinction exists anywhere, and one does
+> (`../../specs/002-admin-panel/spec.md`).
+
 - [ ] `InputElement`'s `isForgot` prop links to `//auth/sign-in` — a protocol-relative URL pointing
       at a host called `auth`. Unused here, so it was left alone; it needs a one-character fix
       before a forgot-password flow uses it.

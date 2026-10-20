@@ -14,3 +14,4 @@ is the working document and stays in `specs/`; the page is the part that outlive
 this behaves, and why it is like that, six months later.
 
 - [[Authorization]] — email + password accounts, httpOnly JWT session, route guards.
+- [[Admin-Panel]] — AdminJS at `/admin`, resources generated from the Prisma schema, login gated by an `ADMIN_EMAILS` allowlist.

@@ -33,6 +33,7 @@ One page per feature, end to end — index and conventions in [[Features]]. Page
 [[Feature|99-Templates/Feature]] during the `build` phase of the [[Workflow|feature cycle]].
 
 - [[Authorization]] — email + password accounts, httpOnly JWT session, route guards
+- [[Admin-Panel]] — AdminJS at `/admin`, generated from the Prisma schema, allowlisted login
 
 ## Decisions
 

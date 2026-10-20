@@ -174,24 +174,39 @@ read. `nginx -t` passes. Through the proxy: `/admin/login` answers 200 carrying 
 `script-src 'self'` untouched; all four panel bundles answer 200; `/admin` with no trailing slash
 answers 302 to `/admin/login`; `/` and `/api/health` still route as before. **Satisfies:** AC-10.
 
-### - [ ] 7. Docs
+### - [x] 7. Docs
 
 Commit: `docs: document the admin panel`
 
-- [ ] `docs/03-Features/`: new feature page from `docs/99-Templates/Feature.md`, exact sections kept
+- [x] `docs/03-Features/`: new feature page from `docs/99-Templates/Feature.md`, exact sections kept
       (Overview, User flow, Backend / Frontend, Open questions, Decisions, Sources)
-- [ ] Link it from `[[Index]]` and the Features MOC
-- [ ] `docs/03-Features/Authorization.md`: `> [!warning] Contradiction` callout against its "no
+- [x] Link it from `[[Index]]` and the Features MOC
+- [x] `docs/03-Features/Authorization.md`: `> [!warning] Contradiction` callout against its "no
       roles" line
-- [ ] `docs/05-Runbooks/Deploy.md`: Cloudflare Access recipe, `/api/admin` reachability note, the
+- [x] `docs/05-Runbooks/Deploy.md`: Cloudflare Access recipe, `/api/admin` reachability note, the
       two new env vars, and the CSP justification
-- [ ] `docs/02-Architecture/Backend.md`: module in the `src/` layout block and feature list
-- [ ] `docs/01-Onboarding/Tech-stack.md`: justify the deps; `Local-setup.md`: panel URL
-- [ ] `docs/journal/2026-10-20.md`: append `- HH:MM · {ingest|dev|lint|decision} · …`
-- [ ] Follow `docs/AGENTS.md`: wikilinks inside the vault, markdown links for files outside it
+- [x] `docs/02-Architecture/Backend.md`: module in the `src/` layout block and feature list
+- [x] `docs/01-Onboarding/Tech-stack.md`: justify the deps; `Local-setup.md`: panel URL
+- [x] `docs/journal/2026-10-20.md`: append `- HH:MM · {ingest|dev|lint|decision} · …`
+- [x] Follow `docs/AGENTS.md`: wikilinks inside the vault, markdown links for files outside it
 
-**Verify:** `pnpm docs:lint` (broken wikilinks fail the run), then `pnpm lint`. **Satisfies:**
-AC-12.
+Stale facts found and corrected while writing, beyond the planned scope:
+
+- [x] `Backend.md`'s `src/` layout block never listed `src/auth/` at all, though Authorization
+      shipped. Added alongside `src/admin/`, since a layout block that omits a whole module is wrong
+      rather than merely incomplete
+- [x] `Known-Gaps.md` claimed `apps/api` has one unit test over password hashing. It has four suites
+      now
+- [x] `Known-Gaps.md` gained a new gap: suppressing a sensitive field is a name in a set, not a
+      check, so the next secret column is exposed until somebody adds it
+- [x] `Known-Gaps.md`'s rate-limiting section now notes that the two login paths in this repo
+      differ, and why the panel's limiter is not a model for `/auth/login`
+- [x] `Local-setup.md` gained `pnpm db:studio`, which exists but was undocumented
+
+**Verify:** `pnpm docs:lint` reports 28 pages, 24 linked, no broken links. The one open
+contradiction it lists is the callout deliberately added to `Authorization.md`, which
+`docs/AGENTS.md` says to leave until a human closes it. `pnpm lint`, `pnpm typecheck`,
+`pnpm pages:lint` and 33/33 tests all green. **Satisfies:** AC-12.
 
 ### - [ ] 8. Review and PR
 
