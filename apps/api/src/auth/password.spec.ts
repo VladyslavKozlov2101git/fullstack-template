@@ -1,4 +1,4 @@
-import { hashPassword, verifyPassword } from "./password";
+import { decoyDigest, hashPassword, verifyPassword } from "./password";
 
 describe("password", () => {
   it("verifies the password it hashed", async () => {
@@ -52,8 +52,6 @@ describe("password", () => {
   });
 
   it("does not cache a failed decoy, so one failure is not permanent", async () => {
-    const { decoyDigest } = await import("./password");
-
     // Two calls share one computation, and it resolves — a rejected promise
     // would be handed out forever and only unknown-email logins would break.
     expect(await decoyDigest()).toBe(await decoyDigest());

@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "node20",
+    // Required by ts-jest once the module kind is node20; it also keeps every file
+    // independently transpilable, which is what the Nest build already assumes.
+    "isolatedModules": true,
     "target": "ES2023",
     "lib": ["ES2023"],
-    "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,

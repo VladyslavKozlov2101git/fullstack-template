@@ -17,13 +17,15 @@ Why behind each task: `plan.md`. Criteria: `spec.md`.
 
 ## Tasks
 
-### - [ ] 1. Module-mode switch (backend-only)
+### - [x] 1. Module-mode switch (backend-only)
 
 Commit: `chore(api): switch to node20 module resolution`
 
-- [ ] `apps/api/tsconfig.json`: `module` to `node20`; drop `moduleResolution: "node"`
-- [ ] `apps/api/src/auth/password.spec.ts:55`: replace `await import("./password")` with a static
+- [x] `apps/api/tsconfig.json`: `module` to `node20`; drop `moduleResolution: "node"`
+- [x] `apps/api/src/auth/password.spec.ts:55`: replace `await import("./password")` with a static
       import (the decoy-not-cached assertion does not need a dynamic import)
+- [x] `isolatedModules: true` added: ts-jest warns that a hybrid module kind is only supported with
+      it. Unplanned fallout of this task, not scope creep
 
 **Verify:** `pnpm --filter api typecheck`; `pnpm --filter api test` (both existing spec files green,
 incl. the digest-parameter assertion at `password.spec.ts:32`); `pnpm --filter api build`; boot the
