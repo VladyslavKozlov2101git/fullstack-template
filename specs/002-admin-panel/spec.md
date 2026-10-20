@@ -1,0 +1,124 @@
+# Admin panel: view and edit database records
+
+A protected admin panel for viewing and editing database records, built on AdminJS mounted into the
+existing NestJS app, with resources registered automatically from the Prisma schema.
+
+## Why / context
+
+The request (`request.md`, verbatim Ukrainian): look at user records in the DB and change them
+through a convenient interface, reachable on live/dev and not only locally, "like the Django admin".
+When offered a hand-written page in `apps/web`, AdminJS, a Directus/NocoDB container, or Prisma
+Studio behind Cloudflare Access, the user rejected the hand-written option: "не хочу самописну
+адмінку", with potentially up to a hundred models. Zero per-model maintenance is the point of the
+design, not a nice-to-have.
+
+Nothing in the repo today can do this. There is no authorization (no roles, no second guard),
+nothing updates or deletes a `User`, and no deploy path exists.
+
+## Decisions already made
+
+| #   | Decision                                                                                                                                                                                                               | Reason                                                                                                                                                                                      |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | AdminJS mounted into the existing Nest app at `apps/api` via `@adminjs/nestjs` + `@adminjs/prisma`. Not a separate process, not Directus/NocoDB, not a hand-written admin in `apps/web`.                               | The user rejected self-written; one process, one deploy unit.                                                                                                                               |
+| 2   | Mount path `/api/admin`. Must not shadow `/api/docs` or `/api/docs-json`.                                                                                                                                              | `dev.nginx` proxies only `/api/`; this needs zero nginx change and is reachable as deployed.                                                                                                |
+| 3   | Resources registered by iterating Prisma DMMF, not a hand-kept list. Opt-out: a new model appears with no code change. Sensitive fields are suppressed per field.                                                      | ~100 models in prospect.                                                                                                                                                                    |
+| 4   | AdminJS's own login screen, via its `authenticate()` hook, verifying email + password against the `User` table with `verifyPassword`. Auth module, `JwtAuthGuard`, `access_token` cookie, `{ sub }` payload untouched. | Keeps the panel session fully separate from the app session.                                                                                                                                |
+| 5   | Admin identity from a new `ADMIN_EMAILS` env var (comma-separated). Access = email in allowlist AND password verifies. No `role` column.                                                                               | Keeps the feature off `schema.prisma`: no migration, no `pnpm api:generate`, no contention for the one-branch-changes-schema rule. Trade-off: adding an admin means redeploying an env var. |
+| 6   | `password` is configured invisible (list/show/edit/filter) and write-protected on every resource.                                                                                                                      | DMMF exposes it regardless of the client `omit`; `omit` alone is a plaintext-write hole.                                                                                                    |
+| 7   | Setting a password is a separate, explicit AdminJS action: takes a new plaintext value, stores `await hashPassword(value)`.                                                                                            | Analogue of Django's `set_password()`; the only safe way to write the field.                                                                                                                |
+| 8   | The panel's express-session cookie is scoped to `path: /api/admin`; its signing secret is a new env var.                                                                                                               | Does not sit beside `access_token` on `path: "/"`.                                                                                                                                          |
+| 9   | On deployed environments: AdminJS login plus Cloudflare Access (or equivalent) in front of `/api/admin`. Documented in the runbook, not enforced in code.                                                              | The repo cannot enforce a proxy it does not own.                                                                                                                                            |
+| 10  | `apps/api/tsconfig.json`: `module` `commonjs` -> `node20`, drop `moduleResolution: "node"` (TypeScript rejects that combination).                                                                                      | Keeps `await import()` real so the ESM-only adapter loads.                                                                                                                                  |
+| 11  | Every new env var goes in `apps/api/.env.example`.                                                                                                                                                                     | Repo rule in `apps/api/CLAUDE.md`.                                                                                                                                                          |
+
+## Verified ground truth
+
+Established by research, not guesses.
+
+| Area             | Fact                                                                                                                                                                                                                                                                                               |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Versions         | `adminjs@7.8.17`, `@adminjs/prisma@5.0.4`, `@adminjs/nestjs@7.0.0`, all MIT. `@adminjs/prisma` peers `@prisma/client ^5 \|\| ^6`, so Prisma 6 is officially supported; no fork needed.                                                                                                             |
+| Module loading   | `adminjs` loads from CommonJS on Node 24 (`require(esm)`, no top-level await). `@adminjs/nestjs` exports only an `import` condition, so `require()` fails with `ERR_PACKAGE_PATH_NOT_EXPORTED`; it needs a real dynamic `import()`.                                                                |
+| TypeScript       | Under `module: "commonjs"`, TS 5.9 downlevels `await import()` to `require()` and fails typecheck with `TS2307` on that package. Under `module: "node20"` it emits a real `import()` and resolves types. Verified by compiling both ways.                                                          |
+| Output format    | `apps/api` has no `"type"` field, so output stays CommonJS either way; Nest keeps working.                                                                                                                                                                                                         |
+| Blast radius     | `apps/api/src` has no `__dirname`, `require(`, `module.exports`, `export =`, and no `index.ts`. One exception: `apps/api/src/auth/password.spec.ts:55` uses `await import("./password")`, which behaves differently once `import()` is real.                                                       |
+| DMMF vs `omit`   | `@adminjs/prisma` derives fields from DMMF, not the client `omit` (`apps/api/src/prisma.service.ts:13`). An auto-registered `User` carries `password`: reads return `undefined`, a write persists whatever was typed, in plaintext. The most dangerous interaction in this feature.                |
+| Write vs `omit`  | `omit` hides a field from results only; it does not prevent writing. The existing `PrismaService` can read users and set a password.                                                                                                                                                               |
+| nginx            | `apps/web/conf/dev.nginx:23` proxies only `location /api/`; `location /` (:31) serves the SPA via `try_files`, so a mount at `/admin` is unreachable. :17 sets CSP `script-src 'self'; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'` with `always`, applying to proxied responses too. |
+| OpenAPI          | `SwaggerModule.createDocument` walks only decorated Nest controllers, so an Express-mounted sub-app is invisible to it; `setGlobalPrefix("api")` does not apply to Express mounts either. Codegen output is unaffected, unless the app fails to boot.                                              |
+| Prisma instances | No `PrismaModule`; `PrismaService` is in each module's `providers` (`auth.module.ts:35`, `users.module.ts:10`), already two clients and two pools.                                                                                                                                                 |
+| Password helpers | `apps/api/src/auth/password.ts` exports exactly `hashPassword(plain)`, `verifyPassword(plain, stored)`, `decoyDigest()`. Digest format `scrypt$N$r$p$salt$digest`.                                                                                                                                 |
+| Authorization    | None exists: no `role` column, no second guard, no `@Roles()`, no RBAC dependency. `docs/03-Features/Authorization.md:119` records "no roles" as out of scope.                                                                                                                                     |
+| Writes to User   | Nothing updates or deletes a user today; the only write is `prisma.user.create` at `apps/api/src/auth/auth.service.ts:32`.                                                                                                                                                                         |
+| Lint             | `.oxlintrc.json:30` enforces `max-lines: 250`.                                                                                                                                                                                                                                                     |
+
+## Scope
+
+| In scope                                                                                                  | Out of scope (reason)                                                                                                                                                                                               |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AdminJS panel at `/api/admin` in `apps/api`                                                               | Any deploy path: no Dockerfile, no CI, no hosting choice. None exists and `docs/05-Runbooks/Deploy.md:9-10` declares itself untested. Until a deploy exists, the "on live" half of the request cannot be exercised. |
+| Resources auto-registered from Prisma DMMF                                                                | A `role` / `isAdmin` column or any RBAC in the database: decision 5.                                                                                                                                                |
+| AdminJS login against `User`, gated by `ADMIN_EMAILS`                                                     | Any admin UI in `apps/web`: the user rejected a hand-written admin.                                                                                                                                                 |
+| `password` suppression on every resource; explicit set-password action                                    | Per-model or per-field permission tiers, multiple admin roles: one kind of admin.                                                                                                                                   |
+| Panel session cookie scoped to `/api/admin`, new secret env var                                           | Audit logging, 2FA, SSO: not requested.                                                                                                                                                                             |
+| `tsconfig.json` module-mode change and fallout (incl. `password.spec.ts`)                                 | Pagination/filtering work on the existing `GET /api/users`: unrelated to the panel.                                                                                                                                 |
+| `ADMIN_EMAILS` and session secret in `.env.example`; CSP change in `dev.nginx` only if the panel needs it | Enforcing Cloudflare Access in code: the repo does not own the proxy.                                                                                                                                               |
+| Docs: feature page, Authorization contradiction, Deploy runbook, journal entry                            | Changes to the existing auth module, `JwtAuthGuard` or JWT payload.                                                                                                                                                 |
+
+## Acceptance criteria
+
+1. `GET /api/admin` serves the AdminJS login page; any unauthenticated `/api/admin/*` request lands
+   on it rather than on panel content.
+2. An email listed in `ADMIN_EMAILS` with the correct password gains access. An email not in the
+   list is rejected even with a correct password. A wrong password is rejected. An empty or unset
+   `ADMIN_EMAILS` grants nobody access.
+3. The `User` resource lists existing users and permits editing `email` and `name`, and deleting a
+   user.
+4. The `password` field appears in no list, show, edit or filter view, and no edit-form submission
+   can change the stored digest: editing another field leaves the digest byte-identical.
+5. The set-password action stores a digest in `scrypt$N$r$p$salt$digest` form, and the affected user
+   can then sign in through `POST /api/auth/login` with the new password.
+6. The resource list is derived from Prisma DMMF, not a hand-written array: adding a model to
+   `schema.prisma` surfaces it in the panel with no code change.
+7. `pnpm api:generate` produces a `packages/api-client/src/schema.d.ts` identical to the current
+   one; no `/admin` paths enter the OpenAPI document.
+8. The app still boots and `/api/docs-json` still responds, i.e. the ESM import of the adapter does
+   not break bootstrap (codegen depends on it).
+9. `pnpm typecheck`, `pnpm lint` and `pnpm test` are green after the module-mode change, and
+   `password.spec.ts` still asserts that a failed decoy is not cached.
+10. The panel renders, rather than appearing blank, behind the CSP in `apps/web/conf/dev.nginx`. If
+    AdminJS requires a relaxed CSP, the change is made in that file and justified in the runbook.
+11. `ADMIN_EMAILS` and the session-secret variable are both present in `apps/api/.env.example`.
+12. Docs: a feature page created from `docs/99-Templates/Feature.md`, reachable from `[[Index]]` and
+    the Features MOC; the "no roles" statement at `docs/03-Features/Authorization.md:119` reconciled
+    with a `> [!warning] Contradiction` callout per `docs/AGENTS.md`; `docs/05-Runbooks/Deploy.md`
+    extended with the Cloudflare Access recipe and the `/api/admin` reachability note; a
+    `docs/journal/2026-10-20.md` entry. `pnpm docs:lint` passes.
+
+## Risks
+
+| Risk                                                                                                                          | Note                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `@adminjs/prisma` DMMF vs client `omit`                                                                                       | Mitigated by AC-4, but it generalises: every future sensitive field needs explicit suppression, and nothing in the repo enforces it. |
+| CSP may blank the panel                                                                                                       | AC-10.                                                                                                                               |
+| `@adminjs/nestjs` pulls `reflect-metadata@0.1.14` beside the repo's `0.2.2`                                                   | Both patch the same global `Reflect`, usually benign, but this is a decorator-heavy app. Watch it.                                   |
+| Dependency tree grows by roughly 500 packages                                                                                 | Accepted cost: it buys zero-per-model maintenance.                                                                                   |
+| A new Nest module listing `PrismaService` in its own `providers` adds a third `PrismaClient` and pool                         | See open questions.                                                                                                                  |
+| `@adminjs/express` and `express-session` are required by the Nest adapter's Express loader and are not installed transitively | Must be added explicitly.                                                                                                            |
+| Module-mode switch changes how `await import()` behaves in `password.spec.ts:55`                                              | AC-9 guards the decoy-not-cached assertion.                                                                                          |
+| Admin list is an env var                                                                                                      | Adding or removing an admin needs a redeploy (decision 5).                                                                           |
+| No rate limiting on the admin login                                                                                           | The repo has none anywhere, and decision 9 is documentation rather than enforcement, so an exposed `/api/admin` is brute-forceable.  |
+
+## Open questions
+
+For the plan phase.
+
+- Which Prisma client instance does the mount use, given there is no `PrismaModule` and
+  `PrismaService` is per-module today?
+- Do AdminJS's bundled assets need a CSP relaxation, and if so, what is the narrowest one that
+  works?
+- Should the set-password action enforce the same rules as `POST /api/auth/register` (the
+  registration DTO's constraints), or accept any non-empty string?
+- Does `authenticate()` verify the password even for emails outside `ADMIN_EMAILS` (via
+  `decoyDigest()`), so the panel does not leak which addresses are admins, matching the equal-cost
+  path at `apps/api/src/auth/auth.service.ts:52`?
