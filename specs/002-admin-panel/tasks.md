@@ -129,16 +129,28 @@ edited user still signs in through `POST /api/auth/login`; create answers `Forbi
 writes no row; delete works. Note `isAccessible: false` answers HTTP 200 with an error body rather
 than 403 — that is AdminJS's JSON-API convention, not a failure. **Satisfies:** AC-3, AC-4, AC-6.
 
-### - [ ] 5. Set-password action (backend-only)
+### - [x] 5. Set-password action (backend-only)
 
 Commit: `feat(api): add a set-password action to the admin panel`
 
-- [ ] Separate explicit action taking a new plaintext value
-- [ ] Validate against `PASSWORD_MIN`/`PASSWORD_MAX` imported from `apps/api/src/auth/auth.dto.ts`
-- [ ] Store `await hashPassword(value)`
+- [x] Separate explicit action taking a new plaintext value
+- [x] Validate against `PASSWORD_MIN`/`PASSWORD_MAX` imported from `apps/api/src/auth/auth.dto.ts`
+- [x] Store `await hashPassword(value)`
 
-**Verify:** after using it, the stored value matches `scrypt$N$r$p$salt$digest` and the user can
-sign in through `POST /api/auth/login` with the new password. **Satisfies:** AC-5.
+- [x] Implemented as a virtual `newPassword` field on the edit form, not as a standalone AdminJS
+      action. An action with its own input needs a custom React component, and bundling components
+      is the thing that cannot run here — the same wall task 3 hit. The virtual field is AdminJS's
+      own recipe for this and needs no component
+- [x] An absent or empty value leaves the stored digest alone, so editing a name cannot wipe
+      someone's password
+- [x] Five more tests: the field is edit-only, a value hashes to a verifiable digest, empty and
+      absent are no-ops, and a short value is refused
+
+**Verify:** confirmed end to end against Postgres. The edit form offers `name`, `email`,
+`newPassword:password` and no digest anywhere. After setting one, the stored value matches
+`scrypt$32768$8$1$<salt>$<digest>`, holds no plaintext, the new password signs in through
+`POST /api/auth/login` with 200 and the old one gets 401. A too-short value comes back as a
+field-level error on `newPassword` and changes nothing. **Satisfies:** AC-5.
 
 ### - [ ] 6. nginx CSP block (frontend-side config; no `apps/api` file)
 
