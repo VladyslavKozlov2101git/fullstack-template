@@ -4,6 +4,7 @@ import express from "express";
 import path from "node:path";
 
 import { isAdminEmail } from "./admin-emails";
+import { adminResources } from "./admin-resources";
 
 import { decoyDigest, verifyPassword } from "../auth/password";
 import { PrismaService } from "../prisma.service";
@@ -53,6 +54,7 @@ export class AdminModule implements OnModuleInit {
     // rewrites them into `require()` and the app dies at boot.
     const { default: AdminJS, Router: AdminRouter } = await import("adminjs"),
       { buildAuthenticatedRouter } = await import("@adminjs/express"),
+      { Database, Resource } = await import("@adminjs/prisma"),
       // Read here, not at module scope: `main.ts` calls `process.loadEnvFile()`
       // inside `bootstrap()`, after this file's imports have been evaluated.
       secret = process.env.ADMIN_SESSION_SECRET;
@@ -63,7 +65,12 @@ export class AdminModule implements OnModuleInit {
       );
     }
 
-    const admin = new AdminJS({ rootPath: ADMIN_ROOT_PATH, resources: [] }),
+    AdminJS.registerAdapter({ Database, Resource });
+
+    const admin = new AdminJS({
+        rootPath: ADMIN_ROOT_PATH,
+        resources: adminResources(this.prisma),
+      }),
       // AdminJS serves its own frontend bundles with a bare `res.sendFile`,
       // whose default is `dotfiles: "ignore"`. pnpm keeps every package under
       // node_modules/.pnpm, so every asset path contains a dot-segment and all

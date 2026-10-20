@@ -87,17 +87,47 @@ and all five frontend bundles return 200; a listed email with the right password
 email with a wrong password does not; an unlisted email with the right password does not; unset
 `ADMIN_EMAILS` admits nobody. **Satisfies:** AC-1, AC-2, AC-11.
 
-### - [ ] 4. Resources from DMMF, `password` suppressed (backend-only)
+### - [x] 4. Resources from DMMF, `password` suppressed (backend-only)
 
 Commit: `feat(api): register admin resources from the prisma schema`
 
-- [ ] Build the resource list by iterating Prisma DMMF, not a hand-kept list; split into its own
+- [x] Build the resource list by iterating Prisma DMMF, not a hand-kept list; split into its own
       file if the options file nears `max-lines: 250`
-- [ ] `password` invisible in list/show/edit/filter and write-protected on every resource
+- [x] `password` invisible in list/show/edit/filter and write-protected on every resource
+
+- [x] `isVisible: false` is not enough on its own: AdminJS forwards an arbitrary request body to the
+      adapter, so a `before` hook on edit and new drops the suppressed keys from the payload.
+      Without it a hand-made POST writes a plaintext password and locks the account out of login
+- [x] Create is closed on any model whose suppressed field is required with no default, since it
+      could only ever fail at the database. Users are created by POST /api/auth/register
+- [x] One regression test (`admin-resources.spec.ts`): the list matches the DMMF model list, the
+      digest is hidden, a smuggled password is dropped, and create is closed
 
 **Verify (AC-4):** read the stored digest for a user, edit that user's `name` through the panel,
-re-read the digest, confirm it is byte-identical. Confirm `password` appears in no view. Confirm
-`User` lists, edits `email`/`name`, and deletes. **Satisfies:** AC-3, AC-4, AC-6.
+re-read the digest, confirm it is byte-identical. Confirm `password` appears in no view. Confirmed
+by hand against Postgres: the record params are `id, email, name, createdAt` with no `password`; an
+edit carrying `password=totally-plaintext-pwned` changed `name` and left the digest byte-identical
+and still in `scrypt### - [x] 4. Resources from DMMF, `password` suppressed (backend-only)
+
+Commit: `feat(api): register admin resources from the prisma schema`
+
+- [x] Build the resource list by iterating Prisma DMMF, not a hand-kept list; split into its own
+      file if the options file nears `max-lines: 250`
+- [x] `password` invisible in list/show/edit/filter and write-protected on every resource
+
+- [x] `isVisible: false` is not enough on its own: AdminJS forwards an arbitrary request body to the
+      adapter, so a `before` hook on edit and new drops the suppressed keys from the payload.
+      Without it a hand-made POST writes a plaintext password and locks the account out of login
+- [x] Create is closed on any model whose suppressed field is required with no default, since it
+      could only ever fail at the database. Users are created by POST /api/auth/register
+- [x] One regression test (`admin-resources.spec.ts`): the list matches the DMMF model list, the
+      digest is hidden, a smuggled password is dropped, and create is closed
+
+**Verify (AC-4):** read the stored digest for a user, edit that user's `name` through the panel,
+re-read the digest, confirm it is byte-identical. Confirm `password` appears in no view. form; the
+edited user still signs in through `POST /api/auth/login`; create answers `ForbiddenError` and
+writes no row; delete works. Note `isAccessible: false` answers HTTP 200 with an error body rather
+than 403 — that is AdminJS's JSON-API convention, not a failure. **Satisfies:** AC-3, AC-4, AC-6.
 
 ### - [ ] 5. Set-password action (backend-only)
 
