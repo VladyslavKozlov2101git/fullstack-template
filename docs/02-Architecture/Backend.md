@@ -45,4 +45,4 @@ Full procedures: the `nest-module` and `prisma-migration` skills.
 
 ## Features touching this app
 
-None yet. Feature pages carry `apps: [api]` and are linked from here.
+- [[Authorization]] — `src/auth/`, the JWT cookie session, and the guard on `GET /users`.

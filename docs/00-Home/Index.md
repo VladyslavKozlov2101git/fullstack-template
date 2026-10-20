@@ -29,9 +29,10 @@ production.
 
 ## Features
 
-One page per feature, end to end — index and conventions in [[Features]]. None yet; the first one is
-created from [[Feature|99-Templates/Feature]] during the `build` phase of the
-[[Workflow|feature cycle]].
+One page per feature, end to end — index and conventions in [[Features]]. Pages are created from
+[[Feature|99-Templates/Feature]] during the `build` phase of the [[Workflow|feature cycle]].
+
+- [[Authorization]] — email + password accounts, httpOnly JWT session, route guards
 
 ## Decisions
 

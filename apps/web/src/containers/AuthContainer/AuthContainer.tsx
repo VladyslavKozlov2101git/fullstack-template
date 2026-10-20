@@ -1,5 +1,5 @@
-import { FC, Fragment, ReactNode, Suspense, useEffect } from "react";
-import { Outlet, useNavigate } from "react-router";
+import { FC, Fragment, ReactNode, Suspense } from "react";
+import { Navigate, Outlet } from "react-router";
 
 import clsx from "clsx";
 
@@ -7,7 +7,7 @@ import styles from "./AuthContainer.module.scss";
 
 import { mainPath } from "../../routes/paths";
 
-import { useAppSelector } from "@app/reduxHooks";
+import { useGetMeQuery } from "@services/cachedAPI";
 
 import LoaderComponent from "@shared/LoaderComponent";
 
@@ -16,15 +16,19 @@ interface AuthContainerProps {
   children?: ReactNode;
 }
 
+/**
+ * The mirror of MainContainer, reading the same cache entry. Both gate on
+ * `isSuccess`/`isError` so exactly one of them ever redirects: mixing
+ * predicates (`!data` here, `data` there) makes both read "unauthenticated"
+ * while the request is pending, which loses a deep link and leaves two junk
+ * history entries behind.
+ */
 const AuthContainer: FC<AuthContainerProps> = ({ className = "" }) => {
-  const token = useAppSelector((state) => state.session.token),
-    navigate = useNavigate();
+  const { isSuccess, isError } = useGetMeQuery();
 
-  useEffect(() => {
-    if (token) {
-      navigate(mainPath.dashboard.path);
-    }
-  }, [token, navigate]);
+  if (isSuccess) return <Navigate to={mainPath.dashboard.path} replace />;
+
+  if (!isError) return <LoaderComponent />;
 
   return (
     <Fragment>

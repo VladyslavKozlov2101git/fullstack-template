@@ -20,3 +20,4 @@ a lint run, and after an ADR lands. Rules: [[AGENTS]].
 ## Days
 
 - [[2026-10-19]]
+- [[2026-10-20]]

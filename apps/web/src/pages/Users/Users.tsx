@@ -18,6 +18,7 @@ const Users: FC<UsersProps> = ({ className = "" }) => {
   return (
     <>
       <title>Users | App</title>
+      <meta name="description" content="Browse the registered users." />
       <div className={clsx(styles.root, className, "card-wrap")} data-testid="users">
         <h2>Users</h2>
 

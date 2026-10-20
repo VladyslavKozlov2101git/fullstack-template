@@ -33,7 +33,7 @@ pnpm dev                              # api :3000, web :5173
 ```
 apps/
   api/          NestJS 11 + Prisma 6 — owns the DB schema and the HTTP contract
-  web/          React 19 + Vite — Redux Toolkit, RTK Query, SCSS modules, plop
+  web/          React 19 + Vite — Redux Toolkit, RTK Query, SCSS modules
 packages/
   api-client/   @repo/api-client — generated from the OpenAPI spec, committed, never hand-edited
 docs/           the knowledge base — an Obsidian vault (MOC, ADRs, runbooks, journal)
@@ -48,15 +48,14 @@ Each app has its own `CLAUDE.md` with the rules that apply inside it. Start with
 
 ## Commands
 
-|                                     |                                                         |
-| ----------------------------------- | ------------------------------------------------------- |
-| `pnpm dev`                          | every app, in parallel                                  |
-| `pnpm --filter web dev`             | just one app (`web`, `api`, `docs`)                     |
-| `pnpm build` / `test` / `typecheck` | across the workspace, cached by turbo                   |
-| `pnpm lint` / `lint:fix` / `format` | oxlint + oxfmt + prettier over the repo                 |
-| `pnpm plop`                         | scaffold a web component (tsx + module.scss + index.ts) |
-| `pnpm db:up` / `db:migrate`         | Postgres container / Prisma migration                   |
-| `pnpm api:generate`                 | regenerate the typed client (API must be running)       |
+|                                     |                                                   |
+| ----------------------------------- | ------------------------------------------------- |
+| `pnpm dev`                          | every app, in parallel                            |
+| `pnpm --filter web dev`             | just one app (`web`, `api`, `docs`)               |
+| `pnpm build` / `test` / `typecheck` | across the workspace, cached by turbo             |
+| `pnpm lint` / `lint:fix` / `format` | oxlint + oxfmt + prettier over the repo           |
+| `pnpm db:up` / `db:migrate`         | Postgres container / Prisma migration             |
+| `pnpm api:generate`                 | regenerate the typed client (API must be running) |
 
 ## The contract loop
 

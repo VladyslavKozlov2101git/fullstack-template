@@ -17,9 +17,9 @@ has exactly one job.
 | Layer            | File                        | Job                                                                            |
 | ---------------- | --------------------------- | ------------------------------------------------------------------------------ |
 | generated client | `@repo/api-client`          | types plus a `createApiClient` factory, nothing else                           |
-| app client       | `src/services/api.ts`       | the single instance, plus auth header / 401 redirect / 5xx toast middleware    |
+| app client       | `src/services/api.ts`       | the single instance, plus 401 redirect / 5xx toast middleware                  |
 | server state     | `src/services/cachedAPI.ts` | RTK Query caching and hooks; endpoints call the typed client through `queryFn` |
-| client state     | `src/redux/*Slice`          | `createSlice` for state the server does not own (`SessionSlice`)               |
+| client state     | `src/redux/*Slice`          | `createSlice` for state the server does not own — none at present              |
 | pages            | `src/pages/*`               | rendering and local UI state only                                              |
 
 `cachedAPI` uses `fakeBaseQuery()` deliberately: endpoints call the typed client directly, so
@@ -29,6 +29,10 @@ layer.
 Import `api` from `@services/api`, never `createApiClient` from the package — a second client misses
 the middleware.
 
+There is no session slice. The cookie carrying the session is httpOnly, so JavaScript cannot read it
+and there is nothing to mirror: `useGetMeQuery()` is who-am-I and the guards in `containers/` gate on
+its `isSuccess`/`isError`. See [[Authorization]].
+
 ## Folders
 
 `app/` (store, typed redux hooks, `App.tsx`) · `assets/` (icons, global SCSS) · `components/` (dumb
@@ -36,12 +40,19 @@ presentational) · `containers/` (auth-gated layout shells) · `helpers/` · `la
 Footer) · `models/` (types derived from the contract) · `pages/` (one folder per route) · `redux/` ·
 `routes/` · `services/` · `shared/` (UI primitives) · `tests/`.
 
-Every component is a folder of three files — `Name.tsx`, `Name.module.scss`, `index.ts` — generated
-with `pnpm plop`. Path aliases (`@app`, `@shared`, `@services`, …) are declared in **both**
+Every component is a folder of three files — `Name.tsx`, `Name.module.scss`, `index.ts`. Path
+aliases (`@app`, `@shared`, `@services`, …) are declared in **both**
 `vite.config.ts` and `tsconfig.json`; add to both or the build and the editor disagree.
+
+## Page metadata
+
+Every page under `pages/` renders its own `<title>` and `<meta name="description">`. React 19
+hoists both into `<head>`, so there is no helmet dependency. `ErrorPage` adds
+`<meta name="robots" content="noindex">` — an error is nothing to rank. `pnpm pages:lint` enforces
+the pair and the Stop hook runs it, so a page cannot ship without metadata.
 
 Details and the full rule list: `apps/web/CLAUDE.md`.
 
 ## Features touching this app
 
-None yet. Feature pages carry `apps: [web]` and are linked from here.
+- [[Authorization]] — sign-in and sign-up pages, and the route guards both containers run.

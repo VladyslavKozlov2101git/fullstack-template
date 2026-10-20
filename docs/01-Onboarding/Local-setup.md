@@ -34,7 +34,6 @@ the commit and push guards described in [[Workflow]]. There is no husky.
 | `pnpm --filter web dev`             | one app (`web`, `api`)                            |
 | `pnpm build` / `test` / `typecheck` | across the workspace, cached by turbo             |
 | `pnpm lint` / `lint:fix` / `format` | oxlint + oxfmt + prettier over the repo           |
-| `pnpm plop`                         | scaffold a web component                          |
 | `pnpm db:up` / `db:migrate`         | Postgres container / Prisma migration             |
 | `pnpm api:generate`                 | regenerate the typed client (API must be running) |
 | `pnpm docs:lint`                    | check this vault for broken links and orphans     |
