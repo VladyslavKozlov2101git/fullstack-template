@@ -6,3 +6,5 @@ dist/
 .vitepress/cache/
 .vitepress/dist/
 docs/.obsidian/
+# AdminJS writes a generated component stub here on boot.
+.adminjs/

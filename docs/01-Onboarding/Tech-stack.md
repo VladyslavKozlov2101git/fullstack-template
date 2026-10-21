@@ -24,6 +24,21 @@ NestJS 11, Prisma 6, Postgres 17, `@nestjs/swagger` for the OpenAPI spec, `class
 input. TypeScript 5.9 here, deliberately behind the frontend: decorator metadata is load-bearing in
 Nest and well-proven on 5.x.
 
+`adminjs` + `@adminjs/prisma` + `@adminjs/express` power [[Admin-Panel]], with `express`,
+`express-session`, `express-formidable` and `tslib` as the express adapter's peers. This is the
+one place the repo accepts a large dependency rather than writing the code: around 375 packages,
+against a hand-written admin for potentially a hundred models. Two consequences to know before
+touching it:
+
+- `express` is pinned to the **exact** version `@nestjs/platform-express` uses. A caret range
+  resolves to a newer 5.x and puts two copies of the framework in one process.
+- 14 `@tiptap/*` packages are pinned in `pnpm-workspace.yaml`. AdminJS's design system and its
+  own starter kit disagree about their versions badly enough to crash the API at boot — see
+  [[Admin-Panel]].
+
+`module` is `node20` rather than `commonjs` in `apps/api/tsconfig.json`, because AdminJS is
+ESM-only and the dynamic `import()` that loads it must survive compilation.
+
 ## apps/web — see [[Frontend]]
 
 React 19, Vite 8, TypeScript 7, Redux Toolkit + RTK Query, SCSS modules, `react-router` 8, `clsx`,
