@@ -43,6 +43,21 @@ Criteria rules: numbered, so later documents and reviews can cite `AC-3`. One be
 Testable from outside — "the users list shows email and name, newest first", not "implement a users
 service". No implementation detail, no file names.
 
+Coverage floor — the criteria together must cover each of these, or say `N/A — <reason>` for it in
+one line:
+
+- **happy path** — the thing working;
+- **failure** — invalid input, not found, conflict: what the user sees;
+- **authorization** — who may do it, and what someone who may not gets;
+- **invariant** — a rule that must always hold (uniqueness, at most once, never negative), if the
+  feature has one.
+
+Authorization is the one this repo has already shipped without: the first auth spec left the API
+unguarded, and only the post-build review caught it.
+
+When you are told the feature is **small**, write `spec.md` and `tasks.md` only, with the approach
+as two or three lines at the top of `tasks.md` instead of a `plan.md`.
+
 ## plan.md
 
 How it will be built: the approach, the files and modules it touches, the data flow, and anything

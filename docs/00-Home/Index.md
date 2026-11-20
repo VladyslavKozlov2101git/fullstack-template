@@ -40,6 +40,8 @@ One page per feature, end to end — index and conventions in [[Features]]. Page
 - [[0001-contract-first-openapi]] — types are generated from the spec, never hand-written
 - [[0002-two-long-lived-branches]] — `master` + `development`, everything else short-lived
 - [[0003-hooks-enforce-not-prose]] — anything that must not slip is a hook, not a rule in CLAUDE.md
+- [[0004-borrow-from-sdd-not-the-pipeline]] — five practices taken from genkovich/sdd, and why not
+  the rest
 
 ## Cross-cutting
 

@@ -39,12 +39,12 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 Four mechanisms, each doing one job. The split matters: **CLAUDE.md advises, hooks enforce** —
 anything that must not slip belongs in a hook or a permission rule, not in prose here.
 
-|        | Where                                         | Does                                                                                                                             |
-| ------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| rules  | this file + per-app `CLAUDE.md`               | always loaded; short and always true                                                                                             |
-| skills | `.claude/skills/`, `apps/api/.claude/skills/` | procedures, loaded on demand — `feature` (the SDD pipeline), `nest-module`, `prisma-migration`                                   |
-| agents | `.claude/agents/`                             | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `test-runner`, `doc-writer` (writes spec/plan/tasks, sonnet) |
-| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck, lint or `pages:lint` are red                     |
+|        | Where                                         | Does                                                                                                                            |
+| ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| rules  | this file + per-app `CLAUDE.md`               | always loaded; short and always true                                                                                            |
+| skills | `.claude/skills/`, `apps/api/.claude/skills/` | procedures, loaded on demand — `feature` (the SDD pipeline), `fix` (bugs), `nest-module`, `prisma-migration`                    |
+| agents | `.claude/agents/`                             | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `spec-critic` (spec ambiguity), `test-runner`, `doc-writer` |
+| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck, lint or `pages:lint` are red                    |
 
 `check.sh` skips turns that changed no `.ts`/`.tsx`, and gives up after three blocked attempts so a
 session can never be trapped. Both hooks are plain `sh` and read their payload with node — this
@@ -57,8 +57,11 @@ turn).
 skill, not straight into code.** It runs the SDD cycle one session per phase (spec → plan → build →
 review): research delegated to `Explore`, document writing to `doc-writer`, review to
 `spec-reviewer` + `reviewer`. Always say which phase you are in. The user approves the spec, the
-plan and the PR; everything between those is yours. A one-line fix is not a feature — use judgement,
-but when in doubt write the spec.
+plan and the PR; everything between those is yours. A small feature (no schema change, no new
+endpoint) takes the skill's short lane — one session, one approval for spec and plan together.
+
+**A bug report goes through the `fix` skill**: reproduce, trace to the spec's acceptance criteria,
+failing test first, smallest fix, then patch the spec if it let the bug through.
 
 If the same mistake happens twice, change the system rather than the code: a rule here, a step in a
 skill, or a check in a hook.
