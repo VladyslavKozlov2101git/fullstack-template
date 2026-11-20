@@ -9,7 +9,7 @@ tags:
 
 # Backend — apps/api
 
-NestJS 11 + Prisma 6 on Postgres. Owns the schema and the contract; see [[System-overview]].
+NestJS 12 + Prisma 6 on Postgres. Owns the schema and the contract; see [[System-overview]].
 
 All _Nest_ routes are under the `/api` prefix (`setGlobalPrefix`), Swagger UI is at `/api/docs` and the
 spec at `/api/docs-json`. The spec is generated with `ignoreGlobalPrefix: true`, so paths in it are

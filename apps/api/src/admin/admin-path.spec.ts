@@ -1,3 +1,5 @@
+import { describe, expect, it } from "vitest";
+
 import { isAdminPath } from "./admin-path";
 
 describe("isAdminPath", () => {
