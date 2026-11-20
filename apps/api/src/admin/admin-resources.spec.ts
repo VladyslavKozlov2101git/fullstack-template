@@ -73,7 +73,11 @@ describe("the edit payload hook", () => {
     expect((await edit({ name: "Ada", ...payload }))?.payload).toEqual({ name: "Ada" });
   });
 
-  it("refuses a value shorter than registration would accept", async () => {
+  // The refusal throws AdminJS's own ValidationError, which the hook imports on
+  // demand — and this is the first import of adminjs in the test process, so it
+  // loads the whole ESM graph: ~1.5 s warm, past vitest's 5 s default on the
+  // first run after an install. In the app, AdminModule has already loaded it.
+  it("refuses a value shorter than registration would accept", { timeout: 30_000 }, async () => {
     await expect(edit({ newPassword: "a".repeat(PASSWORD_MIN - 1) })).rejects.toThrow();
   });
 
