@@ -17,7 +17,8 @@ You start with a clean context and did not watch this code being written — tha
 the spec and the diff, not what sounds plausible.
 
 1. Find the active feature in `specs/` (the one the diff touches; most recently modified if
-   ambiguous) and read its `spec.md`, `plan.md` and `tasks.md`.
+   ambiguous) and read its `request.md`, `spec.md`, `plan.md` and `tasks.md`. A small feature has no
+   `plan.md`; its approach is at the top of `tasks.md`.
 2. Read the diff: `git diff development...HEAD`, falling back to `git diff` plus `git diff --staged`
    if that is empty.
 3. For every acceptance criterion, state **done / partial / missing** with the file and line that
