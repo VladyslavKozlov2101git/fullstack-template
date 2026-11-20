@@ -6,8 +6,8 @@ production.
 
 |                 |                      |
 | --------------- | -------------------- |
-| Node            | >= 22.22             |
-| Package manager | pnpm 10              |
+| Node            | >= 26.13 (LTS)       |
+| Package manager | pnpm 12              |
 | Task runner     | Turborepo            |
 | Database        | Postgres 17 (Docker) |
 
@@ -32,7 +32,7 @@ pnpm dev                              # api :3000, web :5173
 
 ```
 apps/
-  api/          NestJS 11 + Prisma 6 — owns the DB schema and the HTTP contract
+  api/          NestJS 12 + Prisma 6 — owns the DB schema and the HTTP contract
   web/          React 19 + Vite — Redux Toolkit, RTK Query, SCSS modules
 packages/
   api-client/   @repo/api-client — generated from the OpenAPI spec, committed, never hand-edited

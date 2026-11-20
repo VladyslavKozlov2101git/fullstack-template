@@ -26,7 +26,7 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 
 ## Rules
 
-- Node 24, pnpm 10. Don't add npm/yarn lockfiles.
+- Node 26, pnpm 12. Don't add npm/yarn lockfiles.
 - Cross-package imports go through the package name (`@repo/api-client`), not relative paths.
 - Adding a dependency: `pnpm --filter <pkg> add <dep>`. Root deps are tooling only.
 - Schema change → migration → `pnpm api:generate`. In that order.

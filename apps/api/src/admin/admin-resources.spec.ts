@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 import type { ActionRequest } from "adminjs";
+import { describe, expect, it } from "vitest";
 
 import { adminResources } from "./admin-resources";
 

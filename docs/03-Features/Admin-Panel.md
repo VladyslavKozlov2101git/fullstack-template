@@ -125,7 +125,7 @@ false` removes the control, not the query. Measured: `filters.password=scrypt` m
   TypeScript rewrites `await import()` into `require()` and the app dies at boot. `node20` keeps the
   dynamic import real while the output stays CommonJS, since `apps/api` has no `"type"` field.
   `moduleResolution: "node"` had to go with it — TypeScript rejects the pair — and `isolatedModules`
-  followed ts-jest's own warning.
+  keeps every file transpilable on its own, which vitest relies on.
 - **14 `@tiptap/*` packages are pinned in `pnpm-workspace.yaml`.** `@adminjs/design-system` pins
   every tiptap package it names at 2.1.13, but `@tiptap/starter-kit` pulls its sub-extensions with
   caret ranges that resolve to 2.27.x. Those import `canInsertNode`, which 2.1.13 does not export,
