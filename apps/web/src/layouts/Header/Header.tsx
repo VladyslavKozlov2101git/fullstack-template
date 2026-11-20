@@ -7,9 +7,7 @@ import styles from "./Header.module.scss";
 
 import { mainPath } from "../../routes/paths";
 
-import { useAppDispatch, useAppSelector } from "@app/reduxHooks";
-
-import { signOut } from "@redux/SessionSlice/SessionSlice";
+import { useSignOutMutation } from "@services/cachedAPI";
 
 import ButtonElement from "@shared/ButtonElement";
 
@@ -18,8 +16,12 @@ interface HeaderProps {
 }
 
 const Header: FC<HeaderProps> = ({ className = "" }) => {
-  const dispatch = useAppDispatch(),
-    token = useAppSelector((state) => state.session.token);
+  // No `signed in?` check around the button: MainContainer is the only thing
+  // that renders this header, and it does not render until /auth/me succeeded.
+  //
+  // Signing out invalidates "Me", which refetches /auth/me, which 401s, which
+  // makes MainContainer redirect. One server round trip, no page reload.
+  const [signOut, { isLoading }] = useSignOutMutation();
 
   return (
     <header className={clsx(styles.root, className)}>
@@ -31,16 +33,16 @@ const Header: FC<HeaderProps> = ({ className = "" }) => {
             </li>
           ))}
 
-          {token && (
-            <li className="my-auto">
-              <ButtonElement
-                text="Sign out"
-                view="link"
-                size="small"
-                onClick={() => dispatch(signOut())}
-              />
-            </li>
-          )}
+          <li className="my-auto">
+            <ButtonElement
+              text="Sign out"
+              view="link"
+              size="small"
+              isLoading={isLoading}
+              disabled={isLoading}
+              onClick={() => void signOut()}
+            />
+          </li>
         </nav>
       </div>
     </header>

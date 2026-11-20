@@ -13,4 +13,5 @@ A feature page is written when the feature ships, out of its `specs/<feature>/` 
 is the working document and stays in `specs/`; the page is the part that outlives it and answers how
 this behaves, and why it is like that, six months later.
 
-Empty for now — this is a template repo with no features yet.
+- [[Authorization]] — email + password accounts, httpOnly JWT session, route guards.
+- [[Admin-Panel]] — AdminJS at `/admin`, resources generated from the Prisma schema, login gated by an `ADMIN_EMAILS` allowlist.

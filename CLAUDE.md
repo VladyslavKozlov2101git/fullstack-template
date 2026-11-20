@@ -5,8 +5,8 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 ## Layout
 
 - `apps/api` — NestJS + Prisma (Postgres). Owns the schema; exposes OpenAPI at `/api/docs-json`.
-- `apps/web` — React + Vite. Redux Toolkit + RTK Query, SCSS modules, plop generator. Consumes
-  `@repo/api-client`, never hand-writes request types.
+- `apps/web` — React + Vite. Redux Toolkit + RTK Query, SCSS modules. Consumes `@repo/api-client`,
+  never hand-writes request types.
 - `docs/` — the knowledge base: an Obsidian vault. Rules for editing it are `docs/AGENTS.md`; the
   entry point is `docs/00-Home/Index.md`.
 - `packages/api-client` — generated from the API's OpenAPI spec. **Never edit by hand.**
@@ -23,11 +23,10 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 | `pnpm build` / `test` / `typecheck` | across the workspace                    |
 | `pnpm api:generate`                 | regenerate client (API must be running) |
 | `pnpm lint` / `lint:fix` / `format` | oxlint + oxfmt + prettier, whole repo   |
-| `pnpm plop`                         | scaffold a web component                |
 
 ## Rules
 
-- Node 24, pnpm 10. Don't add npm/yarn lockfiles.
+- Node 26, pnpm 12. Don't add npm/yarn lockfiles.
 - Cross-package imports go through the package name (`@repo/api-client`), not relative paths.
 - Adding a dependency: `pnpm --filter <pkg> add <dep>`. Root deps are tooling only.
 - Schema change → migration → `pnpm api:generate`. In that order.
@@ -40,12 +39,12 @@ pnpm + Turborepo monorepo. NestJS API, React web, OpenAPI-generated client, Obsi
 Four mechanisms, each doing one job. The split matters: **CLAUDE.md advises, hooks enforce** —
 anything that must not slip belongs in a hook or a permission rule, not in prose here.
 
-|        | Where                                         | Does                                                                                                                             |
-| ------ | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| rules  | this file + per-app `CLAUDE.md`               | always loaded; short and always true                                                                                             |
-| skills | `.claude/skills/`, `apps/api/.claude/skills/` | procedures, loaded on demand — `feature` (the SDD pipeline), `nest-module`, `prisma-migration`                                   |
-| agents | `.claude/agents/`                             | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `test-runner`, `doc-writer` (writes spec/plan/tasks, sonnet) |
-| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck or lint are red                                   |
+|        | Where                                         | Does                                                                                                                            |
+| ------ | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| rules  | this file + per-app `CLAUDE.md`               | always loaded; short and always true                                                                                            |
+| skills | `.claude/skills/`, `apps/api/.claude/skills/` | procedures, loaded on demand — `feature` (the SDD pipeline), `fix` (bugs), `nest-module`, `prisma-migration`                    |
+| agents | `.claude/agents/`                             | `reviewer` (correctness, scope), `spec-reviewer` (spec compliance), `spec-critic` (spec ambiguity), `test-runner`, `doc-writer` |
+| hooks  | `.claude/settings.json` → `scripts/claude/`   | `format.sh` after every edit; `check.sh` refuses to end a turn while typecheck, lint or `pages:lint` are red                    |
 
 `check.sh` skips turns that changed no `.ts`/`.tsx`, and gives up after three blocked attempts so a
 session can never be trapped. Both hooks are plain `sh` and read their payload with node — this
@@ -58,8 +57,11 @@ turn).
 skill, not straight into code.** It runs the SDD cycle one session per phase (spec → plan → build →
 review): research delegated to `Explore`, document writing to `doc-writer`, review to
 `spec-reviewer` + `reviewer`. Always say which phase you are in. The user approves the spec, the
-plan and the PR; everything between those is yours. A one-line fix is not a feature — use judgement,
-but when in doubt write the spec.
+plan and the PR; everything between those is yours. A small feature (no schema change, no new
+endpoint) takes the skill's short lane — one session, one approval for spec and plan together.
+
+**A bug report goes through the `fix` skill**: reproduce, trace to the spec's acceptance criteria,
+failing test first, smallest fix, then patch the spec if it let the bug through.
 
 If the same mistake happens twice, change the system rather than the code: a rule here, a step in a
 skill, or a check in a hook.

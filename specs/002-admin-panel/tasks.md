@@ -1,0 +1,250 @@
+# Tasks: 002-admin-panel
+
+Why behind each task: `plan.md`. Criteria: `spec.md`.
+
+## Rules
+
+- One task, one commit. Message in Conventional Commits with the app as scope (enforced by
+  `.githooks/commit-msg`).
+- Run the tests after every task. The Stop hook guards typecheck and lint only.
+- Typecheck and lint green at every task boundary.
+- **Task 1 comes first and alone.** No API contract changes here, so it plays the foundation role:
+  everything else depends on the adapter being loadable.
+- **Parallel:** tasks 1-5 are backend-only and sequential. Task 6 (nginx) touches no `apps/api` file
+  and can run in a separate session once task 3 lands. Task 7 (docs) is independent of code but
+  describes it, so write it last.
+- If the spec turns out to be wrong, stop and ask the user. Do not quietly design around it.
+
+## Tasks
+
+### - [x] 1. Module-mode switch (backend-only)
+
+Commit: `chore(api): switch to node20 module resolution`
+
+- [x] `apps/api/tsconfig.json`: `module` to `node20`; drop `moduleResolution: "node"`
+- [x] `apps/api/src/auth/password.spec.ts:55`: replace `await import("./password")` with a static
+      import (the decoy-not-cached assertion does not need a dynamic import)
+- [x] `isolatedModules: true` added: ts-jest warns that a hybrid module kind is only supported with
+      it. Unplanned fallout of this task, not scope creep
+
+**Verify:** `pnpm --filter api typecheck`; `pnpm --filter api test` (both existing spec files green,
+incl. the digest-parameter assertion at `password.spec.ts:32`); `pnpm --filter api build`; boot the
+api, confirm `/api/docs-json` responds; `pnpm api:generate` then
+`git diff --exit-code packages/api-client/src/schema.d.ts`. **Satisfies:** AC-7, AC-8, AC-9.
+
+### - [x] 2. Dependencies (backend-only)
+
+Commit: `chore(api): add adminjs and its express adapter`
+
+- [x] `pnpm --filter api add adminjs @adminjs/prisma @adminjs/nestjs @adminjs/express express-session express-formidable`
+- `@adminjs/express` and `express-session` are required by the Nest adapter's Express loader and are
+  not installed transitively. Adds roughly 500 packages: an accepted cost recorded in the spec.
+- [x] `express`, `express-formidable` and `tslib` added too: all three are peers of
+      `@adminjs/express`, which has no dependencies of its own
+- [x] `express` pinned to exactly `5.2.1` to match Nest, after a caret range produced two copies of
+      express in one process. Actual growth was +375 packages, not ~500
+
+**Verify:** the api still boots; `pnpm --filter api typecheck`. **Satisfies:** supports AC-8.
+
+### - [x] 3. Mount and login (backend-only)
+
+Commit: `feat(api): mount a protected adminjs panel at /admin`
+
+- [x] `apps/api/src/admin/`: module; options factory loading `@adminjs/nestjs` via real dynamic
+      `import()`, `rootPath: "/admin"`, `inject: [PrismaService]` with a `ponytail:` comment on the
+      third-pool ceiling
+- [x] `authenticate()`: lookup with `omit: { password: false }`, always
+      `verifyPassword(password, user?.password ?? await decoyDigest())`, AND allowlist membership
+- [x] Allowlist predicate: entries trimmed and lower-cased, email lower-cased, empty/unset/blank
+      grants nobody
+- [x] Session cookie: distinct name, `path: "/admin"`, `httpOnly`, `sameSite: "lax"`,
+      `secure: process.env.NODE_ENV !== "development"`, written inline
+- [x] `ADMIN_SESSION_SECRET` read **inside the async factory**, not at module scope, and throws
+      there if missing. `main.ts` calls `process.loadEnvFile()` inside `bootstrap()`, while the ES
+      import of `AppModule` is hoisted above it, so a module-scope read runs before `.env` is loaded
+      and throws even when the var is set. `auth.module.ts:27` reads `JWT_SECRET` inside
+      `useFactory` for this reason
+- [x] `apps/api/.env.example`: `ADMIN_EMAILS`, `ADMIN_SESSION_SECRET`; set both in the local `.env`
+- [x] `apps/api/src/app.module.ts`: import the module
+- [x] One `*.spec.ts` for the allowlist predicate: empty/unset env grants nobody, entries trimmed
+      and case-folded, a non-listed address refused
+
+Deviations from the plan, all forced by what the code did:
+
+- [x] Mounted via `@adminjs/express` and `HttpAdapterHost`, not `@adminjs/nestjs`, whose
+      `admin.watch()` cannot bundle under pnpm; `@adminjs/nestjs` removed from the dependencies
+- [x] Root path is `/admin`, not `/api/admin`: AdminJS cannot serve a nested root correctly
+- [x] 14 `@tiptap/*` packages pinned to 2.1.13 in `pnpm-workspace.yaml`, or the process dies at boot
+- [x] Panel assets re-registered with `dotfiles: "allow"`, since pnpm's `.pnpm` directory makes
+      `res.sendFile` 404 every bundle and the page renders blank
+- [x] `main.ts`: `bodyParser: false` plus json and urlencoded that skip `/admin`, or the login POST
+      hangs forever
+- [x] `maxRetries: { count: 5, duration: 300 }` on the login, which closes the rate-limiting risk
+      the spec recorded
+
+**Verify:** tests and typecheck green; by hand, every case confirmed: `/admin` serves the login page
+and all five frontend bundles return 200; a listed email with the right password gets in; a listed
+email with a wrong password does not; an unlisted email with the right password does not; unset
+`ADMIN_EMAILS` admits nobody. **Satisfies:** AC-1, AC-2, AC-11.
+
+### - [x] 4. Resources from DMMF, `password` suppressed (backend-only)
+
+Commit: `feat(api): register admin resources from the prisma schema`
+
+- [x] Build the resource list by iterating Prisma DMMF, not a hand-kept list; split into its own
+      file if the options file nears `max-lines: 250`
+- [x] `password` invisible in list/show/edit/filter and write-protected on every resource
+- [x] `isVisible: false` is not enough on its own: AdminJS forwards an arbitrary request body to the
+      adapter, so a `before` hook on edit and new drops the suppressed keys from the payload.
+      Without it a hand-made POST writes a plaintext password and locks the account out of login
+- [x] Create is closed on any model whose suppressed field is required with no default, since it
+      could only ever fail at the database. Users are created by POST /api/auth/register
+- [x] Regression tests in `admin-resources.spec.ts`: the list matches the DMMF model list, the
+      digest is hidden, a smuggled password is dropped, and create is closed
+
+**Verify (AC-4):** confirmed by hand against Postgres. The record params are
+`id, email, name, createdAt` with no `password`. An edit carrying a smuggled plaintext value changed
+`name` and left the digest byte-identical and still in `scrypt$` form; the edited user still signs
+in through `POST /api/auth/login`; dotted, bracketed and case-variant keys were tried too and Prisma
+rejects them, so the digest survived all of them; create answers `ForbiddenError` and writes no row;
+delete works. Note that `isAccessible: false` answers HTTP 200 with an error body rather than 403 —
+that is AdminJS's JSON-API convention, not a failure. **Satisfies:** AC-3, AC-4, AC-6.
+
+### - [x] 5. Set a password from the panel (backend-only)
+
+Commit: `feat(api): let an admin set a new password from the panel`
+
+- [x] Separate explicit action taking a new plaintext value
+- [x] Validate against `PASSWORD_MIN`/`PASSWORD_MAX` imported from `apps/api/src/auth/auth.dto.ts`
+- [x] Store `await hashPassword(value)`
+
+- [x] Implemented as a virtual `newPassword` field on the edit form, not as a standalone AdminJS
+      action. An action with its own input needs a custom React component, and bundling components
+      is the thing that cannot run here — the same wall task 3 hit. The virtual field is AdminJS's
+      own recipe for this and needs no component
+- [x] An absent or empty value leaves the stored digest alone, so editing a name cannot wipe
+      someone's password
+- [x] Five more tests: the field is edit-only, a value hashes to a verifiable digest, empty and
+      absent are no-ops, and a short value is refused
+
+**Verify:** confirmed end to end against Postgres. The edit form offers `name`, `email`,
+`newPassword:password` and no digest anywhere. After setting one, the stored value matches
+`scrypt$32768$8$1$<salt>$<digest>`, holds no plaintext, the new password signs in through
+`POST /api/auth/login` with 200 and the old one gets 401. A too-short value comes back as a
+field-level error on `newPassword` and changes nothing. **Satisfies:** AC-5.
+
+### - [x] 6. nginx CSP block (frontend-side config; no `apps/api` file)
+
+Commit: `fix(web): allow the admin panel through the CSP`
+
+- [x] `apps/web/conf/dev.nginx`: add `location /admin/` with `proxy_pass` and the four
+      `proxy_set_header` lines copied from `location /api/`
+- [x] Restate all four security headers in the block (nginx drops inherited `add_header` when a
+      level declares its own)
+- [x] CSP relaxed exactly as far as needed: `script-src 'self' 'unsafe-inline'`, `style-src` plus
+      `https://fonts.googleapis.com`, `font-src 'self' https://fonts.gstatic.com`; comment why,
+      referencing the inline `REDUX_STATE`/`createRoot` scripts
+
+- [x] `location /admin`, with no trailing slash: the entry URL is `/admin`, and a `/admin/` block
+      would let it fall through to the SPA
+- [x] A note in the block that an access proxy belongs in front of this path before it is exposed
+
+**Verify:** run over plain http against a real nginx (nginx:alpine in Docker, proxying to the live
+API), so this covered routing and headers but not the Secure-cookie path — which is how the
+`trust proxy` defect in task 8 survived this far. Not just read. `nginx -t` passes. Through the
+proxy: `/admin/login` answers 200 carrying the relaxed CSP **and** all four security headers, which
+is the inheritance trap handled; `/` carries the strict `script-src 'self'` untouched; all four
+panel bundles answer 200; `/admin` with no trailing slash answers 302 to `/admin/login`; `/` and
+`/api/health` still route as before. **Satisfies:** AC-10.
+
+### - [x] 7. Docs
+
+Commit: `docs: document the admin panel`
+
+- [x] `docs/03-Features/`: new feature page from `docs/99-Templates/Feature.md`, exact sections kept
+      (Overview, User flow, Backend / Frontend, Open questions, Decisions, Sources)
+- [x] Link it from `[[Index]]` and the Features MOC
+- [x] `docs/03-Features/Authorization.md`: `> [!warning] Contradiction` callout against its "no
+      roles" line
+- [x] `docs/05-Runbooks/Deploy.md`: Cloudflare Access recipe, `/admin` reachability note, the two
+      new env vars, and the CSP justification
+- [x] `docs/02-Architecture/Backend.md`: module in the `src/` layout block and feature list
+- [x] `docs/01-Onboarding/Tech-stack.md`: justify the deps; `Local-setup.md`: panel URL
+- [x] `docs/journal/2026-10-20.md`: append `- HH:MM · {ingest|dev|lint|decision} · …`
+- [x] Follow `docs/AGENTS.md`: wikilinks inside the vault, markdown links for files outside it
+
+Stale facts found and corrected while writing, beyond the planned scope:
+
+- [x] `Backend.md`'s `src/` layout block never listed `src/auth/` at all, though Authorization
+      shipped. Added alongside `src/admin/`, since a layout block that omits a whole module is wrong
+      rather than merely incomplete
+- [x] `Known-Gaps.md` claimed `apps/api` has one unit test over password hashing. It has four suites
+      now
+- [x] `Known-Gaps.md` gained a new gap: suppressing a sensitive field is a name in a set, not a
+      check, so the next secret column is exposed until somebody adds it
+- [x] `Known-Gaps.md`'s rate-limiting section now notes that the two login paths in this repo
+      differ, and why the panel's limiter is not a model for `/auth/login`
+- [x] `Local-setup.md` gained `pnpm db:studio`, which exists but was undocumented
+
+**Verify:** `pnpm docs:lint` reports 28 pages, 24 linked, no broken links. The one open
+contradiction it lists is the callout deliberately added to `Authorization.md`, which
+`docs/AGENTS.md` says to leave until a human closes it. `pnpm lint`, `pnpm typecheck`,
+`pnpm pages:lint` and 33/33 tests all green. **Satisfies:** AC-12.
+
+### - [x] 8. Review and PR
+
+`spec-reviewer` and `reviewer` run in parallel. Between them they found four real defects, none of
+which the build had caught — every check during it ran with `NODE_ENV=development`, and three of the
+four only appear outside it.
+
+- [x] **The API did not boot at all under `NODE_ENV=production`.** `admin.initialize()` runs
+      AdminJS's component bundler unless `ADMIN_JS_SKIP_BUNDLE=true`, it dies on the missing babel
+      plugin, and nothing awaits the promise, so the rejection is fatal. Flag now set in code, with
+      the stub the bundler would have written served from the module. Found while verifying another
+      finding, not reported by either reviewer
+- [x] **`trust proxy` was unset, so the panel could never hold a session behind nginx.**
+      express-session refuses a Secure cookie on a connection that does not look secure
+      (`express-session/index.js:242`). Measured both ways: with `X-Forwarded-Proto: https` the
+      cookie now arrives `HttpOnly; Secure; SameSite=Lax`; over plain http there is no `Set-Cookie`
+      at all, which is the login loop every deployment would have hit. The same setting fixes
+      `req.ip` for the login limiter, where one attacker's five failures locked out every admin
+- [x] **The digest was readable through list filters.** Measured: `filters.password=scrypt` matched
+      every row with a digest, `filters.password=zzzz` matched none — a blind prefix search.
+      Stripped from `list` and `search` along with `sortBy`, with tests; both queries now return the
+      same row count
+- [x] **The body-parser exclusion was case-sensitive while Express routing is not.**
+      `POST /ADMIN/login` reached the panel but kept Nest's parser, so express-formidable waited on
+      a drained stream and the connection hung, without logging in. Now case-insensitive and
+      segment-exact in `admin-path.ts`, with tests; it answers in 0.17s
+- [x] Also fixed: a minimum length on `ADMIN_SESSION_SECRET`, an 8-hour session `maxAge`, the
+      allowlist re-read per request so revoking an admin ends their session, `nginx` matching the
+      `/admin` segment exactly rather than by prefix, and `ADMIN_ROOT_PATH` moved out of the Nest
+      module so `main.ts` does not import it
+- [x] Accepted rather than fixed, and recorded in `spec.md` and
+      [docs/03-Features/Admin-Panel.md](../../docs/03-Features/Admin-Panel.md): the in-memory
+      session store, and an admin being able to take over another account through the email field
+- [x] Artefacts repaired: task 4 in this file had been duplicated mid-sentence by one of my own
+      patches, and `/api/admin` survived decision 2's revision in the spec, the plan, this file and
+      `.env.example`
+- [x] Disagreed with, with reasons: `express` is pinned exactly **because** a caret range produced
+      two copies of the framework — the lockfile now resolves one. `isolatedModules` does not stop
+      ts-jest type-checking; `tsc --noEmit` runs separately regardless. `tslib` is unused by our
+      code but is a declared peer of `@adminjs/express`, so it stays. Payload key variants
+      (`password.x`, `password[0]`, case changes) were tested and Prisma rejects them
+- [ ] Open PR into `development`; the user's approval is the remaining checkpoint
+
+**Verify:** `pnpm lint && pnpm typecheck && pnpm test` plus `pnpm docs:lint` and `pnpm pages:lint`.
+49 tests. **Satisfies:** all, as a final pass (AC-9).
+
+## Notes
+
+**Prerequisite — this blocks task 1.** Branch `feat/admin-panel` off `development` only once PR #4
+(`feat/page-metadata`) has landed. Until then `development` has no auth at all: no `auth/`
+directory, no `password.ts`, no `PASSWORD_MIN`, no `omit` in `PrismaService`, and no `password`
+column on `User`. Every fact in `spec.md` and `plan.md` was researched in the `feat/page-metadata`
+tree, so it is accurate for that tree and not for `development`. AC-2, AC-4 and AC-5 are meaningless
+without that auth code. When re-checking a base branch, run `git log development..HEAD` before
+trusting what the working tree shows.
+
+Tests are run per task by hand because the Stop hook deliberately skips them. Nothing here touches
+`schema.prisma`, so this branch does not contend for the one-branch-changes-the-schema rule.

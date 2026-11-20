@@ -24,6 +24,11 @@ interface InputElementProps {
   min?: string;
   max?: string;
   isForgot?: boolean;
+  // Declared so call sites can pass them: `...props` already reaches the DOM,
+  // but the interface does not extend React.InputHTMLAttributes (that collides
+  // with the narrowed `type`, `value` and `onChange` above).
+  name?: string;
+  autoComplete?: string;
 }
 
 const InputElement: ForwardRefRenderFunction<
@@ -69,6 +74,8 @@ const InputElement: ForwardRefRenderFunction<
             disabled={disabled}
             required={required}
             aria-label={label}
+            aria-invalid={Boolean(error)}
+            aria-describedby={error ? `${id}-error` : undefined}
             {...props}
           />
         );
@@ -89,6 +96,8 @@ const InputElement: ForwardRefRenderFunction<
           required={required}
           checked={checked}
           aria-label={label}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
           min={min}
           max={max}
           {...props}
@@ -112,7 +121,11 @@ const InputElement: ForwardRefRenderFunction<
           </Link>
         )}
       </div>
-      {error && <p className={styles.error__text}>{error}</p>}
+      {error && (
+        <p id={`${id}-error`} className={styles.error__text} role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 };

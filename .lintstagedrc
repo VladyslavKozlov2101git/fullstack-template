@@ -1,7 +1,7 @@
 {
   "**/src/**/*.{js,jsx,ts,tsx}": [
-    "oxfmt --write",
-    "oxlint -c .oxlintrc.json --fix",
+    "oxfmt --write --no-error-on-unmatched-pattern",
+    "oxlint -c .oxlintrc.json --fix --no-error-on-unmatched-pattern",
     "prettier --write"
   ],
   "**/*.{css,scss,html,json,md,yml,yaml}": ["prettier --write"]

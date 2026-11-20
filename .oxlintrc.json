@@ -1,6 +1,9 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "react", "unicorn"],
+  /* Generated, and the rules here do not apply to it: it is never hand-edited and it grows
+     past max-lines with every endpoint added. Prettier and oxfmt already skip it. */
+  "ignorePatterns": ["packages/api-client/src/schema.d.ts"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",

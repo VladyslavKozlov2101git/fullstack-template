@@ -4,6 +4,8 @@ export const rootAuthPath = "/auth";
 export const rootMainPath = "/main";
 
 const Dashboard = lazy(() => import("@pages/Dashboard")),
+  SignIn = lazy(() => import("@pages/SignIn")),
+  SignUp = lazy(() => import("@pages/SignUp")),
   Users = lazy(() => import("@pages/Users"));
 
 export const mainPath = {
@@ -22,5 +24,16 @@ export const mainPath = {
 };
 
 export const authPath = {
-  signIn: { path: `${rootAuthPath}/sign-in`, slug: "/sign-in", name: "Sign In" },
+  signIn: {
+    component: SignIn,
+    path: `${rootAuthPath}/sign-in`,
+    slug: "/sign-in",
+    name: "Sign In",
+  },
+  signUp: {
+    component: SignUp,
+    path: `${rootAuthPath}/sign-up`,
+    slug: "/sign-up",
+    name: "Sign Up",
+  },
 };

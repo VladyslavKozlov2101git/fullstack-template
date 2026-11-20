@@ -1,9 +1,15 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "node20",
+    // Every file must be transpilable on its own: vitest compiles the specs one
+    // file at a time, without the type information tsc has.
+    "isolatedModules": true,
+    // TypeScript 6 stopped loading every @types package by default. Without this,
+    // `process` and `Buffer` resolve only because some Nest typing happens to
+    // reference node — until one stops.
+    "types": ["node"],
     "target": "ES2023",
     "lib": ["ES2023"],
-    "moduleResolution": "node",
     "outDir": "./dist",
     "rootDir": "./src",
     "declaration": true,

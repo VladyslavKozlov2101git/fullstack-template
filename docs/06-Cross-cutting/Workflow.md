@@ -45,8 +45,22 @@ the context window:
 /feature spec     → specs/NNN-slug/request.md + spec.md   you approve the criteria
 /feature plan     → plan.md + tasks.md                    you approve the plan
 /feature build    → code, tests, one commit per task
-/feature review   → spec-reviewer + reviewer, then PR     you review the PR
+/feature review   → spec-reviewer + reviewer, run it, PR  you review the PR
 ```
+
+A small feature — no schema change, no new endpoint, a handful of files — takes a short lane: spec
+and plan in one session, approved together, with no `plan.md`. Four sessions for a copy change is
+ceremony, not safety. Claude names the lane it picked; overrule it if you disagree.
+
+Inside the spec session, after the spec is written, `spec-critic` reads it with clean context and
+reports where two engineers would build different things. Every finding is settled before you
+approve: tightened, moved to Open questions, or dropped. Each acceptance-criteria set must also cover
+the failure path and who is allowed — the first auth spec here shipped with neither on the server,
+and only the post-build review caught it ([[Known-Gaps]]). The reasoning, and what was deliberately
+not taken from the pipeline that inspired this: [[0004-borrow-from-sdd-not-the-pipeline]].
+
+Before the PR, Claude runs the app and exercises the three most important criteria by hand, and
+the PR body says what it observed. Green tests are not a working feature.
 
 When the feature ships, its page in `03-Features/` is what survives — the spec was the working
 document, the page is the knowledge. Create it from [[Feature|99-Templates/Feature]].
@@ -58,6 +72,7 @@ document, the page is the knowledge. Create it from [[Feature|99-Templates/Featu
 | requirements interview, architecture calls | the main session (Opus)                                                |
 | codebase research                          | `Explore` agent                                                        |
 | writing `spec.md` / `plan.md` / `tasks.md` | `doc-writer` agent (sonnet)                                            |
+| hunting ambiguity in the written spec      | `spec-critic` agent (opus), clean context                              |
 | implementation                             | the main session — delegating it hides the diff you are meant to judge |
 | diagnosing a failing test run              | `test-runner` agent                                                    |
 | review before the PR                       | `spec-reviewer` + `reviewer`, in parallel, clean context               |
@@ -75,9 +90,18 @@ rather than on your attention: hooks, tests, and the two reviewer agents.
 | Spec   | normal                                   | describe the feature, then let Claude interview you until nothing is ambiguous. Read and edit the acceptance criteria — the highest-leverage 15 minutes in the cycle. |
 | Plan   | plan mode                                | check the first task fixes the API contract and the rest builds on it. An architecture mistake caught here is the cheapest one you will ever catch.                   |
 | Build  | `claude --worktree`, acceptEdits or auto | step in only when Claude asks or stalls. It works down `tasks.md`: implement, test, commit.                                                                           |
-| Review | normal                                   | read the spec-compliance report, then the PR.                                                                                                                         |
+| Review | normal                                   | read the spec-compliance report and what was observed running it, then the PR.                                                                                        |
 
 Before the PR: `pnpm lint && pnpm typecheck && pnpm test`. PR into `development`, squash-merge.
+
+## Fixing a bug
+
+Hand over the report, or say `/fix`. No phases: Claude reproduces it as one line (_doing X, expected
+Y, got Z_), finds the acceptance criterion in `specs/` that owns the behaviour, and decides which of
+three it is — the code broke a correct criterion, the criterion was loose enough to allow the bug,
+or no criterion covers it. A failing test pins it before any code changes, then the smallest fix.
+In the last two cases the spec gets patched too, with your confirmation, so the next implementation
+cannot reintroduce the bug legally.
 
 ## Running more than one feature at once
 

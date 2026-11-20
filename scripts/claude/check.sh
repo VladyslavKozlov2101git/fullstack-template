@@ -22,7 +22,7 @@ out=""
 ok=true
 
 if [ "$code_changed" = true ]; then
-  if ! out=$(pnpm typecheck 2>&1 && pnpm lint 2>&1); then ok=false; fi
+  if ! out=$(pnpm typecheck 2>&1 && pnpm lint 2>&1 && pnpm pages:lint 2>&1); then ok=false; fi
 fi
 
 if [ "$ok" = true ] && [ "$docs_changed" = true ]; then
